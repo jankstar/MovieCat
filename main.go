@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 var PORT = "8080"
@@ -128,7 +127,7 @@ func Decrypt(text, MySecret string) (string, error) {
 // ******************************************************************//
 func main() {
 
-	godotenv.Load(".env")
+	//godotenv.Load(".env")
 
 	// Creates a router without any middleware by default
 	gin.SetMode(gin.ReleaseMode)
@@ -162,13 +161,13 @@ func main() {
 		}
 	})
 
-	fmt.Println("server ip is ", ExternalIP())
+	fmt.Println("server ip is ", ExternalIP(), " on port", strconv.Itoa(GetPort()))
 	//router.Run("0.0.0.0:8080")
 	if strings.HasPrefix(ExternalIP(), "192.168") {
-		//wenn local, dann mit TLS
+		//if local, then with TLS
 		panic(r.RunTLS(ExternalIP()+":"+strconv.Itoa(GetPort()), "./key/server.pem", "./key/server.key").Error())
 	} else {
-		//wenn globale IP ohne TLS
+		//if global IP without TLS
 		panic(r.Run(ExternalIP() + ":" + strconv.Itoa(GetPort())).Error())
 	}
 
