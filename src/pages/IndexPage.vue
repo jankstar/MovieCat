@@ -13,9 +13,9 @@ export default defineComponent({
       captureOn: false,
       selCapture: true,
       videoInput: [],
-      videoInputValue: undefined,
+      videoInputValue: "default",
       audioInput: [],
-      audioInputValue: undefined,
+      audioInputValue: "default",
 
       //Stream
       MainStream: <MediaStream>undefined,
@@ -151,12 +151,12 @@ export default defineComponent({
       let that = this;
       try {
         let configuration = { audio: <boolean | any>true, video: <boolean | any>true, systemAudio: "include", surfaceSwitching: "include", selfBrowserSurface: "exclude" };
-        if (this.audioInputValue && this.audioInputValue.value && this.audioInputValue.value != "default") {
+        if (this.audioInputValue && this.audioInputValue != "default") {
           configuration.audio = {
-            deviceId: this.audioInputValue.value || "default",
+            deviceId: this.audioInputValue || "default",
           };
         }
-        if (this.audioInputValue == "off") {
+        if (this.audioInputValue && this.audioInputValue == "off") {
           configuration.audio = false;
         }
         if (this.selCapture) {
@@ -168,7 +168,7 @@ export default defineComponent({
             configuration.video = false;
           }
           configuration.video = {
-            deviceId: this.videoInputValue.value || "default",
+            deviceId: this.videoInputValue || "default",
           };
           this.MainStream = await navigator.mediaDevices.getUserMedia(configuration);
         }
@@ -184,7 +184,7 @@ export default defineComponent({
           //
           let audioStream = await navigator.mediaDevices.getUserMedia({
             audio: {
-              deviceId: this.audioInputValue.value,
+              deviceId: this.audioInputValue,
             },
             video: false,
           });
@@ -443,8 +443,8 @@ export default defineComponent({
             :disable="captureOn"
           />
 
-          <q-select v-if="!selCapture" v-model="videoInputValue" :options="videoInput" :label="$t('Video_Input')" :disable="captureOn" />
-          <q-select v-model="audioInputValue" :options="audioInput" :label="$t('Audio_Input')" :disable="captureOn" />
+          <q-select v-if="!selCapture" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="captureOn" />
+          <q-select v-model="audioInputValue" :options="audioInput" emit-value map-options :label="$t('Audio_Input')" :disable="captureOn" />
         </q-card-section>
 
         <q-card-section>
