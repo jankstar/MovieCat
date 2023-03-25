@@ -1,0 +1,65 @@
+<script lang="ts">
+import { defineComponent } from "vue";
+import { useQuasar } from "quasar";
+
+export default defineComponent({
+  name: "MovieCat",
+  props: ["langu"],
+
+  components: {},
+
+  data: () => {
+    const $q = useQuasar();
+    return {
+      $q,
+    };
+  },
+});
+</script>
+<template>
+  <q-page class="q-pa-md">
+    <div class="tw-flex tw-row tw-gap-4">
+      <!-- capture -->
+      <q-card>
+        <q-card-section>
+          <h5><b>MovieCat</b></h5>
+          <h7 v-if="langu == 'de-DE'">
+            <br />
+            Version: 0.1.0 <br />
+            Beschreibung: <br />
+            Aufzeichnung eines Films von einer Kamera oder Bildschirm und sichern als Datei.
+            <br />
+          </h7>
+          <h7 v-else>
+            <br />
+            Version: 0.1.0 <br />
+            Description: <br />
+            Record a movie from a camera or screen and save it as a file.
+            <br />
+          </h7>
+          <h7>
+            <br />
+            Quasar: {{ $q.version }} <br />
+            Vite: 2.9.15 <br />
+            tailwindcss: 3.2.4 <br />
+            Platform: {{ $q.platform.is.platform }} <br />
+            Browser target: es2019, edge88, firefox78, chrome87, safari13.1<br />
+          </h7>
+          <h7>
+            <br />
+            Icons: material-icons <br />
+            fontFamily: ChakraPetch, Merriweather<br />
+            This Font Software is licensed under the SIL Open Font License, Version 1.1. <br />
+            <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a>
+          </h7>
+        </q-card-section>
+        <q-separator />
+
+        <q-card-actions>
+          <q-btn :label="`${$t('Home')}`" @click="$router.push('/')" />
+        </q-card-actions>
+      </q-card>
+    </div>
+  </q-page>
+</template>
+<style></style>

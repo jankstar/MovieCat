@@ -1,0 +1,45 @@
+export default {
+  'en-US': {
+    "Language": "Language",
+    "Home": "Home",
+
+    "On": "on",
+    "Off": "off",
+    "Device": "Device",
+    "Capture": "capture",
+    "Camera": "camera",
+    "Video_Input": "Video Input",
+    "Audio_Input": "Audio Input",
+    "Capture_state": "Capture State:",
+    "Recorder_state": "Recorder State:",
+    "Start": "Start",
+    "Stop": "Stop",
+    "Frame_rate": "Frame Rate",
+    "Resolution": "Resolution",
+    "AudioMuted": "muted",
+    "Filename": "Filename",
+    "Size": "Size:",
+  },
+  //
+  'de-DE': {
+    "Language": "Sprache",
+    "Home": "Home",
+
+    "On": "ein",
+    "Off": "aus",
+    "Device": "Gerät",
+    "Capture": "Bildschirm",
+    "Camera": "Kamera",
+    "Video_Input": "Video Eingang",
+    "Audio_Input": "Audio Eingang",
+    "Capture_state": "Aufnahme Status:",
+    "Recorder_state": "Speichern Status:",
+    "Start": "Start",
+    "Stop": "Stop",
+    "Frame_rate": "Frame Rate",
+    "Resolution": "Auflösung",
+    "AudioMuted": "stumm",
+    "Filename": "Dateiname",
+    "Size": "Größe:",
+  }
+}

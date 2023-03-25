@@ -1,0 +1,14 @@
+{
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": ["source.fixAll.eslint"],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
+  "appService.zipIgnorePattern": ["node_modules{,/**}", ".vscode{,/**}"],
+  "appService.defaultWebAppToDeploy": "/subscriptions/4fdc5026-49b8-4753-aaf7-2cbe61416b35/AppServices/subscriptions/4fdc5026-49b8-4753-aaf7-2cbe61416b35/resourceGroups/AppServicesGruppe/providers/Microsoft.Web/sites/moviecat",
+  "appService.deploySubpath": ".",
+
+  "go.buildFlags": ["-tags=functional"],
+  "go.testTags": "functional"
+}
