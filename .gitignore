@@ -1,5 +1,6 @@
 .DS_Store
 .thumbs.db
+.deployment
 node_modules
 *.env
 .env
