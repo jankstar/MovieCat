@@ -69,7 +69,7 @@ export default defineComponent({
     },
     //
     // eslint-disable-next-line no-unused-vars
-    stopBtn(e) {
+    stopBtn() {
       console.log(`stopBtn(e)`);
 
       this.MainStream.oninactive = undefined;
@@ -97,40 +97,47 @@ export default defineComponent({
           let videoinputDefault = undefined;
           let audioinputDefault = undefined;
 
+          this.videoInput.push({ label: `${this.$t("Video_off")}`, value: "off" }); //video off
+          this.audioInput.push({ label: `${this.$t("Audio_off")}`, value: "off" }); //audio off
+
           devices.forEach((device) => {
             if (device.kind == "videoinput") {
               let item = { label: device.label.substring(0, 40) || `Camera ${countCam++}`, value: device.deviceId || "default" };
-              that.videoInput.push(item);
               if (device.deviceId == "default") {
+                item.label = "Video default";
                 videoinputDefault = item;
               }
+              that.videoInput.push(item);
             }
 
             if (device.kind == "audioinput") {
               let item = { label: device.label.substring(0, 40) || `Mic ${countMic++}`, value: device.deviceId || "default" };
-              that.audioInput.push(item);
               if (device.deviceId == "default") {
+                item.label = "Audio default";
                 audioinputDefault = item;
               }
+              that.audioInput.push(item);
             }
 
             console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
           });
 
-          let item = { label: `Camera default`, value: "default" };
           if (videoinputDefault == undefined) {
+            let item = { label: `Video default`, value: "default" };
             that.videoInput.push(item);
+            videoinputDefault = item;
           }
           if (!that.videoInputValue) {
-            that.videoInputValue = item;
+            that.videoInputValue = videoinputDefault;
           }
 
-          item = { label: `Mic default`, value: "default" };
           if (audioinputDefault == undefined) {
+            let item = { label: `Audio default`, value: "default" };
             that.audioInput.push(item);
+            audioinputDefault = item;
           }
           if (!that.audioInputValue) {
-            that.audioInputValue = item;
+            that.audioInputValue = audioinputDefault;
           }
         })
         .catch((err) => {
@@ -141,18 +148,25 @@ export default defineComponent({
     //
     async startDisplayMedia() {
       console.log("startDisplayMedia()");
+      let that = this;
       try {
-        let configuration = { audio: <boolean | any>true, video: <boolean | any>true, surfaceSwitching: "include", selfBrowserSurface: "exclude" };
-        if (this.audioInputValue && this.audioInputValue.value) {
+        let configuration = { audio: <boolean | any>true, video: <boolean | any>true, systemAudio: "include", surfaceSwitching: "include", selfBrowserSurface: "exclude" };
+        if (this.audioInputValue && this.audioInputValue.value && this.audioInputValue.value != "default") {
           configuration.audio = {
             deviceId: this.audioInputValue.value || "default",
           };
+        }
+        if (this.audioInputValue == "off") {
+          configuration.audio = false;
         }
         if (this.selCapture) {
           //device capture
           this.MainStream = await navigator.mediaDevices.getDisplayMedia(configuration);
         } else {
           //device camera
+          if (this.videoInputValue == "off") {
+            configuration.video = false;
+          }
           configuration.video = {
             deviceId: this.videoInputValue.value || "default",
           };
@@ -166,6 +180,19 @@ export default defineComponent({
         }
 
         lTracks = this.MainStream.getAudioTracks();
+        if (lTracks && lTracks.length == 0 && configuration.audio.deviceId != "default" && configuration.audio.deviceId != "off") {
+          //
+          let audioStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              deviceId: this.audioInputValue.value,
+            },
+            video: false,
+          });
+          audioStream.getTracks().forEach((my_track: any) => {
+            that.MainStream.addTrack(my_track, audioStream);
+          });
+          lTracks = this.MainStream.getAudioTracks();
+        }
         if (lTracks && lTracks.length > 0 && lTracks[0]) {
           this.AudioSetting = lTracks[0].getSettings();
           this.AudioSetting.muted = lTracks[0].muted;
