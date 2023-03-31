@@ -24,7 +24,7 @@
     <!-- wird benötigt für layout; nicht löschen!-->
     <q-footer elevated> </q-footer>
     <q-page-container>
-      <router-view :langu="locale" />
+      <router-view :langu="$i18n.locale" />
     </q-page-container>
   </q-layout>
 </template>

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@quasar/babel-preset-app": "^2.0.2",
-    "@quasar/extras": "^1.15.11",
+    "@quasar/extras": "^1.16.1",
     "eslint-plugin-typescript": "^0.14.0",
     "quasar": "^2.11.9",
     "vue": "^3.0.0",

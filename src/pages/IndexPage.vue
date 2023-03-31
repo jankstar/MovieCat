@@ -20,21 +20,60 @@ export default defineComponent({
       //Stream
       MainStream: <MediaStream>undefined,
       VideoSetting: undefined,
+      VideoSettingNew: undefined,
+      VideoCapabilities: undefined,
+      VideoSettingDialog: false,
+
       AudioSetting: undefined,
+      AudioSettingNew: undefined,
+      AudioCapabilities: undefined,
+      AudioSettingDialog: false,
       AudioDraw: false,
 
       //Recorder
       Recorder: <MediaRecorder>undefined,
+      recorderOptions: {
+        audioBitsPerSecond: 64000,
+        videoBitsPerSecond: 2500000,
+        mimeType: undefined,
+      },
+      audioBPSOptions: [
+        { value: 32000, label: "32kbit/s" },
+        { value: 48000, label: "48kbit/s" },
+        { value: 64000, label: "64kbit/s" },
+        { value: 128000, label: "128kbit/s" },
+        { value: 196000, label: "196kbit/s" },
+        { value: 256000, label: "256kbit/s" },
+      ],
+      videoBPSOptions: [
+        { value: 1000000, label: "1Mbit/s" },
+        { value: 2500000, label: "2,5Mbit/s" },
+        { value: 6000000, label: "6Mbit/s" },
+      ],
+      mimeTypeOptions: [],
       // eslint-disable-next-line no-undef
       RecorderOption: <MediaRecorderOptions>{
         mimeType: "",
       },
+      recorderSlices: 10, //in sec
+      recorderSlicesOptions: [
+        { value: 1, label: "1 sec" },
+        { value: 10, label: "10 sec" },
+        { value: 30, label: "30 sec" },
+        { value: 60, label: "1 min" },
+        { value: 600, label: "10 min" },
+        { value: 1800, label: "30 min" },
+        { value: 3600, label: "1 h" },
+        { value: 0, label: " undefine" },
+      ],
+      recorderAutoStop: 30, //min
       RecoderBlobList: [],
       RecoderInfoList: [],
       RecorderSize: 0,
       RecorderState: "inactive",
       TimeOutID: undefined,
       fileName: "test",
+      OnOffOptions: [],
     };
   },
 
@@ -44,7 +83,20 @@ export default defineComponent({
 
   async mounted() {
     console.log(`mounted`);
+    this.OnOffOptions = [
+      { value: true, label: this.$t("On") },
+      { value: false, label: this.$t("Off") },
+    ];
     await this.getMediaDevices();
+    this.getMimeType();
+  },
+
+  updated() {
+    console.log(`updated`);
+    this.OnOffOptions = [
+      { value: true, label: this.$t("On") },
+      { value: false, label: this.$t("Off") },
+    ];
   },
 
   methods: {
@@ -80,6 +132,35 @@ export default defineComponent({
         myVideoTag.srcObject = undefined;
       }
       this.captureOn = false;
+    },
+
+    getMimeType() {
+      let trueMimeType = [
+        { value: "video/webm", label: "WebM" },
+        { value: "video/webm;codecs=vp8", label: "WebM Google VP8" },
+        { value: "video/webm;codecs=vp9", label: "WebM Google VP9" },
+        { value: "video/webm;codecs=daala", label: "WebM Daala" },
+        { value: "video/webm;codecs=h264", label: "WebM H.264" },
+        { value: "video/webm;codecs=av1", label: "WebM AV1" },
+        { value: "video/mp4", label: "mp4" },
+        { value: "video/mp4;codecs=vp8", label: "mp4 Google VP8" },
+        { value: "video/mp4;codecs=vp9", label: "mp4 Google VP9" },
+        { value: "video/mp4;codecs=h264", label: "mp4 H.264" },
+        { value: "video/mpeg", label: "mpeg" },
+      ];
+      let that = this;
+      trueMimeType.forEach((item: any) => {
+        if (MediaRecorder.isTypeSupported(item.value)) {
+          console.log(`codec ${item.value} supported`);
+
+          that.mimeTypeOptions.push(item);
+          if (!that.recorderOptions.mimeType) {
+            that.recorderOptions.mimeType = item.value;
+          }
+        } else {
+          console.log(`codec ${item.value} not supported`);
+        }
+      });
     },
     //
     async getMediaDevices() {
@@ -151,14 +232,16 @@ export default defineComponent({
       let that = this;
       try {
         let configuration = { audio: <boolean | any>true, video: <boolean | any>true, systemAudio: "include", surfaceSwitching: "include", selfBrowserSurface: "exclude" };
-        if (this.audioInputValue && this.audioInputValue != "default") {
+        if (!this.audioInputValue || this.audioInputValue == "default") {
+          configuration.audio = true;
+        } else if (this.audioInputValue == "off") {
+          configuration.audio = false;
+        } else {
           configuration.audio = {
             deviceId: this.audioInputValue || "default",
           };
         }
-        if (this.audioInputValue && this.audioInputValue == "off") {
-          configuration.audio = false;
-        }
+
         if (this.selCapture) {
           //device capture
           this.MainStream = await navigator.mediaDevices.getDisplayMedia(configuration);
@@ -166,10 +249,14 @@ export default defineComponent({
           //device camera
           if (this.videoInputValue == "off") {
             configuration.video = false;
+          } else {
+            configuration.video = {
+              deviceId: this.videoInputValue || "default",
+            };
           }
-          configuration.video = {
-            deviceId: this.videoInputValue || "default",
-          };
+          if (configuration.video == false && configuration.audio == false) {
+            throw new Error("audio and video off - no media stream");
+          }
           this.MainStream = await navigator.mediaDevices.getUserMedia(configuration);
         }
 
@@ -177,11 +264,13 @@ export default defineComponent({
         let lTracks = this.MainStream.getVideoTracks();
         if (lTracks && lTracks.length > 0 && lTracks[0]) {
           this.VideoSetting = lTracks[0].getSettings();
+          this.VideoSetting.enabled = lTracks[0].enabled;
+          console.log("video getCapabilities()", JSON.stringify(lTracks[0].getCapabilities()));
         }
 
         lTracks = this.MainStream.getAudioTracks();
-        if (lTracks && lTracks.length == 0 && configuration.audio.deviceId != "default" && configuration.audio.deviceId != "off") {
-          //
+        if (lTracks && lTracks.length == 0 && this.audioInputValue && this.audioInputValue != "default" && this.audioInputValue != "off") {
+          //audio was not detected via capture - add it manually
           let audioStream = await navigator.mediaDevices.getUserMedia({
             audio: {
               deviceId: this.audioInputValue,
@@ -195,8 +284,8 @@ export default defineComponent({
         }
         if (lTracks && lTracks.length > 0 && lTracks[0]) {
           this.AudioSetting = lTracks[0].getSettings();
-          this.AudioSetting.muted = lTracks[0].muted;
-
+          this.AudioSetting.muted = lTracks[0].muted || !lTracks[0].enabled;
+          console.log("audio getCapabilities()", JSON.stringify(lTracks[0].getCapabilities()));
           this.drawCanvas("audio");
         }
 
@@ -210,49 +299,54 @@ export default defineComponent({
     },
 
     newMediaRecorder() {
-      if (!this.MainStream) {
-        throw new Error("no media stream");
-      }
-      this.Recorder = new MediaRecorder(this.MainStream);
-      this.RecoderBlobList = [];
-      this.RecoderInfoList = [];
-      this.RecorderSize = 0;
-      let that = this;
-
-      this.Recorder.ondataavailable = (e) => {
-        console.log(`type: ${e.type} time: ${e.timecode} size: ${e.data.size}`);
-        if (e.data && e.data.size > 0) {
-          that.RecoderBlobList.push(e.data);
-          that.RecoderInfoList.push({ type: e.type, time: e.timecode, size: e.data.size });
-          that.RecorderSize += e.data.size;
+      try {
+        if (!this.MainStream) {
+          throw new Error("no media stream");
         }
-      };
 
-      this.Recorder.onstop = () => {
-        console.log("onstop()");
-        that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
-      };
+        this.Recorder = new MediaRecorder(this.MainStream, this.recorderOptions);
+        this.RecoderBlobList = [];
+        this.RecoderInfoList = [];
+        this.RecorderSize = 0;
+        let that = this;
 
-      this.Recorder.onerror = (e) => {
-        console.log("onerror()", e);
-        that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
-      };
-      this.Recorder.onpause = () => {
-        console.log("onpause()");
+        this.Recorder.ondataavailable = (e) => {
+          console.log(`type: ${e.type} time: ${e.timecode} size: ${e.data.size}`);
+          if (e.data && e.data.size > 0) {
+            that.RecoderBlobList.push(e.data);
+            that.RecoderInfoList.push({ type: e.type, time: e.timecode, size: e.data.size });
+            that.RecorderSize += e.data.size;
+          }
+        };
 
-        that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
-      };
-      this.Recorder.onresume = () => {
-        console.log("onresume()");
+        this.Recorder.onstop = () => {
+          console.log("onstop()");
+          that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+        };
 
-        that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
-      };
-      // eslint-disable-next-line no-unused-vars
-      this.Recorder.onstart = (e) => {
-        console.log("onstart()");
+        this.Recorder.onerror = (e) => {
+          console.log("onerror()", e);
+          that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+        };
+        this.Recorder.onpause = () => {
+          console.log("onpause()");
 
-        that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
-      };
+          that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+        };
+        this.Recorder.onresume = () => {
+          console.log("onresume()");
+
+          that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+        };
+        // eslint-disable-next-line no-unused-vars
+        this.Recorder.onstart = (e) => {
+          console.log("onstart()");
+
+          that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+        };
+      } catch (err) {
+        console.error(`${err.name}: ${err.message}`);
+      }
     },
 
     stopDisplayMedia() {
@@ -268,6 +362,61 @@ export default defineComponent({
       }
     },
     //
+    AudioSettingBtn() {
+      let [traks] = this.MainStream.getAudioTracks();
+      if (traks) {
+        console.log("AudioSettingBtn()");
+        this.AudioCapabilities = traks.getCapabilities();
+        this.AudioSettingNew = this.AudioSetting;
+        this.AudioSettingDialog = true;
+      }
+    },
+    //
+    async AudioSettingChangeBtn() {
+      let [traks] = this.MainStream.getAudioTracks();
+      if (traks) {
+        console.log("AudioSettingChangeBtn()");
+        await traks.applyConstraints({
+          autoGainControl: this.AudioSettingNew.autoGainControl || false,
+          echoCancellation: this.AudioSettingNew.echoCancellation || false,
+          noiseSuppression: this.AudioSettingNew.noiseSuppression || false,
+          sampleRate: this.AudioSettingNew.sampleRate,
+        });
+        traks.enabled = !this.AudioSettingNew.muted;
+
+        this.AudioSetting = traks.getConstraints();
+        this.AudioSetting.muted = traks.muted || !traks.enabled;
+      }
+      this.AudioSettingDialog = false;
+    },
+    //
+    VideoSettingBtn() {
+      let [traks] = this.MainStream.getVideoTracks();
+      if (traks) {
+        console.log("VideoSettingBtn()");
+        this.VideoCapabilities = traks.getCapabilities();
+        this.VideoSettingNew = this.VideoSetting;
+        this.VideoSettingDialog = true;
+      }
+    },
+    //
+    async VideoSettingChangeBtn() {
+      let [traks] = this.MainStream.getVideoTracks();
+      if (traks) {
+        console.log("VideoSettingChangeBtn()");
+        await traks.applyConstraints({
+          height: this.VideoSettingNew.height,
+          width: this.VideoSettingNew.width,
+          frameRate: this.VideoSettingNew.frameRate,
+        });
+        traks.enabled = this.VideoSettingNew.enabled;
+
+        this.VideoSetting = traks.getConstraints();
+        this.VideoSetting.enabled = traks.enabled;
+      }
+      this.VideoSettingDialog = false;
+    },
+    //
     startRecorderBtn() {
       console.log(`startRecorderBtn()`);
       let that = this;
@@ -275,12 +424,17 @@ export default defineComponent({
       this.newMediaRecorder();
 
       if (this.Recorder && this.Recorder.state == "inactive") {
-        this.Recorder.start(1000); //1 sec Blöcke
+        if (this.recorderSlices && this.recorderSlices > 0) {
+          this.Recorder.start(1000 * this.recorderSlices); //1 sec Slices
+        } else {
+          this.Recorder.start(); //ohne slices
+        }
 
         this.TimeOutID = setTimeout(function () {
           that.stopRecorder();
+          that.download();
           that.TimeOutID = undefined;
-        }, 1000 * 60 * 6 * 25); //2,5 Stunden
+        }, 1000 * 60 * this.recorderAutoStop); //150 min = 2,5h
       }
     },
     stopRecorderBtn() {
@@ -304,12 +458,13 @@ export default defineComponent({
     download() {
       console.log(`download: ${this.RecoderBlobList.length} blobs`);
       if (this.RecoderBlobList && this.RecoderBlobList.length > 0) {
-        var blob = new Blob(this.RecoderBlobList, { type: "video/webm" });
+        var blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
         var url = window.URL.createObjectURL(blob);
         var a = document.createElement("a");
         a.style.display = "none";
         a.href = url;
-        a.download = `${this.fileName}.webm`;
+        a.download = `${this.fileName}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+        console.log(`filename ${a.download}`);
         document.body.appendChild(a);
         a.click();
         setTimeout(function () {
@@ -317,6 +472,12 @@ export default defineComponent({
           window.URL.revokeObjectURL(url);
         }, 3000);
       }
+    },
+    //
+    clearBuffer() {
+      this.RecoderBlobList = [];
+      this.RecoderInfoList = [];
+      this.RecorderSize = 0;
     },
     //
     uuidv4(): string {
@@ -415,6 +576,10 @@ export default defineComponent({
           }, 50);
         } else {
           that.AudioDraw = false;
+          canvasCtx.fillStyle = "rgb(0, 0, 0)";
+          canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+          audioCtx = undefined;
+          analyser = undefined;
         }
       }
 
@@ -426,11 +591,11 @@ export default defineComponent({
 </script>
 <template>
   <q-page class="q-pa-md">
-    <div class="tw-flex tw-row tw-gap-4">
-      <!-- capture -->
+    <div class="tw-grid-flow row tw-gap-4">
+      <!-- input -->
       <q-card style="max-width: 300px">
         <q-card-section>
-          <h7 class="text-body2">{{ $t("Capture_state") }} {{ captureOn ? $t("On") : $t("Off") }}</h7> <br />
+          <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ captureOn ? $t("On") : $t("Off") }}</h7> <br />
           <q-select
             v-model="selCapture"
             :options="[
@@ -446,23 +611,29 @@ export default defineComponent({
           <q-select v-if="!selCapture" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="captureOn" />
           <q-select v-model="audioInputValue" :options="audioInput" emit-value map-options :label="$t('Audio_Input')" :disable="captureOn" />
         </q-card-section>
+        <q-separator />
 
-        <q-card-section>
-          <h7 class="text-subtitle1">Audio ({{ AudioSetting ? $t("On") : $t("Off") }})</h7> <br />
-          <h7 class="text-body2">{{ $t("AudioMuted") }}: {{ AudioSetting && AudioSetting.muted == false ? $t("Off") : $t("On") }}</h7> <br />
-
-          <div class="peer" id="peer-audio">
-            <div class="stat-value">
-              <canvas class="peer_canvas rounded" id="canvas-audio" style="background-color: black; width: 268px"> </canvas
-              ><!-- das canvas wird über Programm gefüllt-->
-            </div>
+        <q-card-section v-if="AudioSetting">
+          <div class="row tw-justify-between">
+            <h7 class="text-subtitle1">Audio</h7>
+            <q-separator />
+            <q-btn flat round sizes="sx" padding="none" icon="edit" @click="AudioSettingBtn" />
           </div>
-
-          <h7 class="text-subtitle1">Video ({{ VideoSetting ? $t("On") : $t("Off") }})</h7> <br />
+          <h7 class="text-body2">{{ $t("AudioMuted") }}: {{ AudioSetting && AudioSetting.muted == false ? $t("Off") : $t("On") }}</h7> <br />
+          <h7 class="text-body2">{{ $t("AutoGainControl") }}: {{ AudioSetting && AudioSetting.autoGainControl == false ? $t("Off") : $t("On") }}</h7> <br />
+          <h7 class="text-body2">{{ $t("NoiseSuppression") }}: {{ AudioSetting && AudioSetting.noiseSuppression == false ? $t("Off") : $t("On") }}</h7> <br />
+          <h7 class="text-body2">{{ $t("EchoCancellation") }}: {{ AudioSetting && AudioSetting.echoCancellation == false ? $t("Off") : $t("On") }}</h7> <br />
+          <h7 class="text-body2">{{ $t("SampleRate") }}: {{ AudioSetting ? (AudioSetting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</h7> <br />
+        </q-card-section>
+        <q-separator />
+        <q-card-section v-if="VideoSetting">
+          <div class="row tw-justify-between">
+            <h7 class="text-subtitle1">Video </h7>
+            <q-separator />
+            <q-btn flat round sizes="sx" padding="none" icon="edit" @click="VideoSettingBtn" />
+          </div>
           <h7 class="text-body2">{{ $t("Resolution") }}: {{ VideoSetting ? `${VideoSetting.width}x${VideoSetting.height}` : "0x0" }}</h7> <br />
           <h7 class="text-body2">{{ $t("Frame_rate") }}: {{ VideoSetting ? VideoSetting.frameRate.toFixed(2) : "0" }}</h7> <br />
-
-          <video id="id_video" playsinline autoplay muted style="background-color: black"></video>
         </q-card-section>
         <q-separator />
 
@@ -472,19 +643,151 @@ export default defineComponent({
         </q-card-actions>
       </q-card>
 
-      <!-- recorder -->
-      <q-card v-if="captureOn" style="max-width: 300px">
+      <!-- audio / Video-->
+      <q-card style="max-width: 300px">
         <q-card-section>
-          <h7 class="text-body2">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
+          <h7 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }})</h7>
+
+          <div class="peer" id="peer-audio">
+            <div class="stat-value">
+              <canvas class="peer_canvas rounded" id="canvas-audio" style="background-color: black; width: 268px"> </canvas
+              ><!-- das canvas wird über Programm gefüllt-->
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-section>
+          <h7 class="text-subtitle1">Video ({{ VideoSetting && VideoSetting.enabled ? $t("On") : $t("Off") }})</h7> <br />
+          <video id="id_video" playsinline autoplay muted style="background-color: black"></video>
+        </q-card-section>
+      </q-card>
+
+      <!-- recorder -->
+      <q-card style="max-width: 300px">
+        <q-card-section>
+          <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
           <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte</h7> <br />
+
+          <q-select
+            v-model="recorderOptions.mimeType"
+            :options="mimeTypeOptions"
+            emit-value
+            map-options
+            :label="$t('Recorder_mimetype')"
+            :disable="mimeTypeOptions.length > 0 && RecorderState != 'inactive'"
+          />
+          <div class="row">
+            <q-select
+              v-model="recorderOptions.audioBitsPerSecond"
+              :options="audioBPSOptions"
+              emit-value
+              map-options
+              :label="$t('Audio_BPS')"
+              :disable="RecorderState != 'inactive'"
+              style="width: 50%"
+            />
+            <q-select
+              v-model="recorderOptions.videoBitsPerSecond"
+              :options="videoBPSOptions"
+              emit-value
+              map-options
+              :label="$t('Video_BPS')"
+              :disable="RecorderState != 'inactive'"
+              style="width: 50%"
+            />
+          </div>
+          <div class="row">
+            <q-select
+              v-model="recorderSlices"
+              :options="recorderSlicesOptions"
+              emit-value
+              map-options
+              :label="$t('Slice_length')"
+              :disable="RecorderState != 'inactive'"
+              style="width: 50%"
+            />
+            <q-input
+              v-model="recorderAutoStop"
+              :label="$t('Auto_stop')"
+              :disable="RecorderState != 'inactive'"
+              type="number"
+              mask="###"
+              fill-mask="#"
+              reverse-fill-mask
+              style="width: 50%"
+              :rules="[(val) => !!val || '* Required', (val) => val > 0 || 'The minimum is 1 min', (val) => val < 151 || 'The maximum is 150 min']"
+            />
+          </div>
           <q-input v-model="fileName" :label="$t('Filename')" />
         </q-card-section>
+        <q-separator />
+
         <q-card-actions>
-          <q-btn label="Rec on" @click="startRecorderBtn" :disable="RecorderState != 'inactive'" />
-          <q-btn label="Rec off" @click="stopRecorderBtn" :disable="RecorderState == 'inactive'" />
-          <q-btn label="download" @click="download" :disable="RecorderSize == 0" />
+          <q-btn v-if="RecorderState == 'inactive'" label="Rec on" @click="startRecorderBtn" :disable="RecorderState != 'inactive' || !captureOn || this.recorderAutoStop > 150" />
+          <q-btn v-else label="Rec off" @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !captureOn" />
+          <!--div v-if="RecorderSize != 0 && RecorderState == 'inactive'"-->
+          <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" />
+          <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" />
+          <!--/div-->
         </q-card-actions>
       </q-card>
+      <!--
+
+
+        Dialog AudioSettingDialog
+      -->
+      <q-dialog v-model="AudioSettingDialog" no-backdrop-dismiss persistent class="tw-font-sans">
+        <q-card style="width: 400px; height: 320px">
+          <q-card-section>
+            <div class="text-h6">Audio Settings</div>
+            <div class="row">
+              <q-select v-model="AudioSettingNew.muted" :options="OnOffOptions" emit-value map-options :label="$t('AudioMuted')" style="width: 45%" />
+              <q-select v-model="AudioSettingNew.autoGainControl" :options="OnOffOptions" emit-value map-options :label="$t('AutoGainControl')" style="width: 45%" />
+              <q-select v-model="AudioSettingNew.noiseSuppression" :options="OnOffOptions" emit-value map-options :label="$t('NoiseSuppression')" style="width: 45%" />
+              <q-select v-model="AudioSettingNew.echoCancellation" :options="OnOffOptions" emit-value map-options :label="$t('EchoCancellation')" style="width: 45%" />
+            </div>
+            <br />
+            <h7 class="text-body2">{{ $t("SampleRate") }}: {{ AudioSettingNew ? (AudioSettingNew.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</h7> <br />
+            <q-slider v-model="AudioSettingNew.sampleRate" :min="AudioCapabilities.sampleRate.min" :max="AudioCapabilities.sampleRate.max" label style="width: 90%" />
+          </q-card-section>
+          <q-separator />
+
+          <q-card-actions>
+            <q-btn @click="AudioSettingDialog = false">{{ $t("Cancle") }}</q-btn>
+            <q-btn @click="AudioSettingChangeBtn">{{ $t("Change") }}</q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <!--
+
+
+        Dialog VideoSettingDialog
+      -->
+      <q-dialog v-model="VideoSettingDialog" no-backdrop-dismiss persistent class="tw-font-sans">
+        <q-card style="width: 400px; height: 420px">
+          <q-card-section>
+            <div class="text-h6">Video Settings</div>
+            <q-select v-model="VideoSettingNew.enabled" :options="OnOffOptions" emit-value map-options :label="$t('VideoEnabled')" style="width: 45%" />
+            <br />
+            <h7 class="text-body2">{{ $t("Resolution") }}: {{ VideoSettingNew ? `${VideoSettingNew.width}x${VideoSettingNew.height}` : "0x0" }}</h7
+            ><br />
+            <br /><h7 class="text-body2">{{ $t("Width") }}: {{ VideoSettingNew ? VideoSettingNew.width : "0" }}</h7
+            ><br />
+            <q-slider v-model="VideoSettingNew.width" :min="VideoCapabilities.width.min" :max="VideoCapabilities.width.max" label style="width: 80%" />
+            <br /><h7 class="text-body2">{{ $t("Height") }}: {{ VideoSettingNew ? VideoSettingNew.height : "0" }}</h7
+            ><br />
+            <q-slider v-model="VideoSettingNew.height" :min="VideoCapabilities.height.min" :max="VideoCapabilities.height.max" label style="width: 80%" />
+            <br /><h7 class="text-body2">{{ $t("SampleRate") }}: {{ VideoSettingNew ? VideoSettingNew.frameRate.toFixed(0) : "0" }}</h7
+            ><br />
+            <q-slider v-model="VideoSettingNew.frameRate" :min="VideoCapabilities.frameRate.min" :max="VideoCapabilities.frameRate.max" label style="width: 80%" />
+          </q-card-section>
+          <q-separator />
+
+          <q-card-actions>
+            <q-btn @click="VideoSettingDialog = false">{{ $t("Cancle") }}</q-btn>
+            <q-btn @click="VideoSettingChangeBtn">{{ $t("Change") }}</q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </div>
   </q-page>
 </template>
