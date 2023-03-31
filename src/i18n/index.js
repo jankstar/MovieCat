@@ -5,8 +5,8 @@ export default {
 
     "On": "on",
     "Off": "off",
-    "Cancle": "Cancle",
-    "Change": "Change",
+    "Cancel": "Cancel",
+    "Save": "Save",
     "Device": "Device",
     "Capture": "capture",
     "Camera": "camera",
@@ -41,8 +41,8 @@ export default {
 
     "On": "ein",
     "Off": "aus",
-    "Cancle": "Abbruch",
-    "Change": "Ändern",
+    "Cancel": "Abbruch",
+    "Save": "Sichern",
     "Device": "Gerät",
     "Capture": "Bildschirm",
     "Camera": "Kamera",

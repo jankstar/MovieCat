@@ -126,6 +126,7 @@ export default defineComponent({
 
       this.MainStream.oninactive = undefined;
       this.stopDisplayMedia();
+      this.stopRecorder();
 
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video");
       if (myVideoTag) {
@@ -448,7 +449,7 @@ export default defineComponent({
     //
     stopRecorder() {
       console.log(`stopRecorder()`);
-      if (!(this.Recorder && this.Recorder.state == "inactive")) {
+      if (this.Recorder && this.Recorder.state != "inactive") {
         this.Recorder.requestData();
         this.Recorder.stop();
       }
@@ -752,8 +753,8 @@ export default defineComponent({
           <q-separator />
 
           <q-card-actions>
-            <q-btn @click="AudioSettingDialog = false">{{ $t("Cancle") }}</q-btn>
-            <q-btn @click="AudioSettingChangeBtn">{{ $t("Change") }}</q-btn>
+            <q-btn @click="AudioSettingDialog = false">{{ $t("Cancel") }}</q-btn>
+            <q-btn @click="AudioSettingChangeBtn">{{ $t("Save") }}</q-btn>
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -783,8 +784,8 @@ export default defineComponent({
           <q-separator />
 
           <q-card-actions>
-            <q-btn @click="VideoSettingDialog = false">{{ $t("Cancle") }}</q-btn>
-            <q-btn @click="VideoSettingChangeBtn">{{ $t("Change") }}</q-btn>
+            <q-btn @click="VideoSettingDialog = false" class="tw-bg-red-500">{{ $t("Cancel") }}</q-btn>
+            <q-btn @click="VideoSettingChangeBtn" class="tw-bg-lime-500">{{ $t("Save") }}</q-btn>
           </q-card-actions>
         </q-card>
       </q-dialog>
