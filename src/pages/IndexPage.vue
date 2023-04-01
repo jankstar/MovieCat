@@ -10,8 +10,8 @@ export default defineComponent({
   data: () => {
     return {
       //MediaDevices
-      captureOn: false,
-      selCapture: true,
+      connectOn: false,
+      selMode: "off",
       videoInput: [],
       videoInputValue: "default",
       audioInput: [],
@@ -108,14 +108,14 @@ export default defineComponent({
       this.RecoderInfoList = [];
       this.RecorderSize = 0;
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video");
-      if (myVideoTag && !this.captureOn) {
+      if (myVideoTag && !this.connectOn) {
         await this.startDisplayMedia();
         if (this.MainStream && this.MainStream.active) {
           this.MainStream.oninactive = () => {
             that.stopBtn();
           };
           myVideoTag.srcObject = this.MainStream;
-          this.captureOn = true;
+          this.connectOn = true;
         }
       }
     },
@@ -132,7 +132,7 @@ export default defineComponent({
       if (myVideoTag) {
         myVideoTag.srcObject = undefined;
       }
-      this.captureOn = false;
+      this.connectOn = false;
     },
 
     getMimeType() {
@@ -243,11 +243,11 @@ export default defineComponent({
           };
         }
 
-        if (this.selCapture) {
-          //device capture
+        if (this.selMode == "capture") {
+          //mode capture
           this.MainStream = await navigator.mediaDevices.getDisplayMedia(configuration);
-        } else {
-          //device camera
+        } else if (this.selMode == "camera") {
+          //mode camera
           if (this.videoInputValue == "off") {
             configuration.video = false;
           } else {
@@ -259,6 +259,9 @@ export default defineComponent({
             throw new Error("audio and video off - no media stream");
           }
           this.MainStream = await navigator.mediaDevices.getUserMedia(configuration);
+        } else {
+          // error
+          return;
         }
 
         this.newMediaRecorder();
@@ -592,25 +595,35 @@ export default defineComponent({
 </script>
 <template>
   <q-page class="q-pa-md">
-    <div class="tw-grid-flow row tw-gap-4">
-      <!-- input -->
-      <q-card style="max-width: 300px">
+    <div class="tw-grid-flow tw-items-start row tw-gap-4">
+      <!-- input and mode -->
+      <q-card style="min-width: 150px; max-width: 300px">
         <q-card-section>
-          <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ captureOn ? $t("On") : $t("Off") }}</h7> <br />
+          <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</h7> <br />
           <q-select
-            v-model="selCapture"
+            v-model="selMode"
             :options="[
-              { label: $t('Capture'), value: true },
-              { label: $t('Camera'), value: false },
+              { label: $t('Off'), value: 'off' },
+              { label: $t('Capture'), value: 'capture' },
+              { label: $t('Camera'), value: 'camera' },
+              { label: $t('File'), value: 'file' },
             ]"
             emit-value
             map-options
-            :label="$t('Device')"
-            :disable="captureOn"
+            :label="$t('Mode')"
+            :disable="connectOn"
           />
 
-          <q-select v-if="!selCapture" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="captureOn" />
-          <q-select v-model="audioInputValue" :options="audioInput" emit-value map-options :label="$t('Audio_Input')" :disable="captureOn" />
+          <q-select v-if="selMode == 'camera'" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="connectOn" />
+          <q-select
+            v-if="selMode == 'camera' || selMode == 'capture'"
+            v-model="audioInputValue"
+            :options="audioInput"
+            emit-value
+            map-options
+            :label="$t('Audio_Input')"
+            :disable="connectOn"
+          />
         </q-card-section>
         <q-separator />
 
@@ -638,14 +651,14 @@ export default defineComponent({
         </q-card-section>
         <q-separator />
 
-        <q-card-actions>
-          <q-btn v-if="!captureOn" :label="$t('Start')" @click="startBtn" />
-          <q-btn v-if="captureOn" :label="$t('Stop')" @click="stopBtn" />
+        <q-card-actions v-if="selMode == 'camera' || selMode == 'capture'">
+          <q-btn v-if="!connectOn" :label="$t('Connect')" @click="startBtn" class="tw-bg-lime-300" />
+          <q-btn v-if="connectOn" :label="$t('Disconnect')" @click="stopBtn" class="tw-bg-red-300" />
         </q-card-actions>
       </q-card>
 
       <!-- audio / Video-->
-      <q-card style="max-width: 300px">
+      <q-card v-if="selMode != 'off'" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }})</h7>
 
@@ -663,7 +676,7 @@ export default defineComponent({
       </q-card>
 
       <!-- recorder -->
-      <q-card style="max-width: 300px">
+      <q-card v-if="selMode == 'capture' || selMode == 'camera' || RecorderSize > 0" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
           <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte</h7> <br />
@@ -723,8 +736,14 @@ export default defineComponent({
         <q-separator />
 
         <q-card-actions>
-          <q-btn v-if="RecorderState == 'inactive'" label="Rec on" @click="startRecorderBtn" :disable="RecorderState != 'inactive' || !captureOn || this.recorderAutoStop > 150" />
-          <q-btn v-else label="Rec off" @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !captureOn" />
+          <q-btn
+            v-if="RecorderState == 'inactive'"
+            label="Rec on"
+            @click="startRecorderBtn"
+            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 150"
+            class="tw-bg-lime-300"
+          />
+          <q-btn v-else label="Rec off" @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !connectOn" class="tw-bg-red-300" />
           <!--div v-if="RecorderSize != 0 && RecorderState == 'inactive'"-->
           <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" />
           <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" />
@@ -753,8 +772,8 @@ export default defineComponent({
           <q-separator />
 
           <q-card-actions>
-            <q-btn @click="AudioSettingDialog = false">{{ $t("Cancel") }}</q-btn>
-            <q-btn @click="AudioSettingChangeBtn">{{ $t("Save") }}</q-btn>
+            <q-btn @click="AudioSettingDialog = false" class="tw-bg-red-300">{{ $t("Cancel") }}</q-btn>
+            <q-btn @click="AudioSettingChangeBtn" class="tw-bg-lime-300">{{ $t("Save") }}</q-btn>
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -784,8 +803,8 @@ export default defineComponent({
           <q-separator />
 
           <q-card-actions>
-            <q-btn @click="VideoSettingDialog = false" class="tw-bg-red-500">{{ $t("Cancel") }}</q-btn>
-            <q-btn @click="VideoSettingChangeBtn" class="tw-bg-lime-500">{{ $t("Save") }}</q-btn>
+            <q-btn @click="VideoSettingDialog = false" class="tw-bg-red-300">{{ $t("Cancel") }}</q-btn>
+            <q-btn @click="VideoSettingChangeBtn" class="tw-bg-lime-300">{{ $t("Save") }}</q-btn>
           </q-card-actions>
         </q-card>
       </q-dialog>
