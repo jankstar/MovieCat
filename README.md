@@ -2,13 +2,21 @@
 
 Chrome App (PWA): Record from camera or screen and save as a movie.
 
+use it <br/>
+[`moviecat.azurewebsites.net`](https://moviecat.azurewebsites.net)
+
+or clone it<br/>
 `git clone https://github.com/jankstar/MovieCat.git`
+
+<br/>
 
 # Server
 
 The application uses a server in go (gin-gonic), but node.js or any other can also be used.
 The go server works locally with generated certificates that have to be created in the /key directory. For testing, I generated the certificates on my local IP address, so that the server can start at another IP address without HTTPS and thus use HTTPS when deploying to Azure via the proxy there.
 If golang is deployed to the Azure Cloud, version 1.17 must be used.
+
+Of course, node.js can also be used.
 
 Please note: the application must either use HTTPS or `localhost`, which is a prerequisite for every PWA application.
 
@@ -40,4 +48,6 @@ The application is generated with the following command:
 
 In the configuration, `minify: false ` can be set if the source code is to be analysed. In addition, `useFilenameHashes: false ` can be used to prevent new file names from being generated again and again for the generated assets and, if necessary, to force the server to reload them.
 
-The server is generated under linux (Azure Cloud) with the command `env GOOS=linux GOARCH=amd64 go build -o server main.go `. In the Azure Cloud, the server is then started `/home/site/wwwroot/server`.
+The server is generated under linux (Azure Cloud) with the command `env GOOS=linux GOARCH=amd64 go build -o server main.go `. In the Azure Cloud, the server is then started `/home/site/wwwroot/server`. Of course, node.js can also be used.
+
+(2023/04/01)

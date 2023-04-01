@@ -323,6 +323,7 @@ export default defineComponent({
           }
         };
 
+        //the events no longer function properly after a stop, so the recoder is completely restarted!
         this.Recorder.onstop = () => {
           console.log("onstop()");
           that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
@@ -343,7 +344,7 @@ export default defineComponent({
           that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
         };
         // eslint-disable-next-line no-unused-vars
-        this.Recorder.onstart = (e) => {
+        this.Recorder.onstart = () => {
           console.log("onstart()");
 
           that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
@@ -429,7 +430,7 @@ export default defineComponent({
 
       if (this.Recorder && this.Recorder.state == "inactive") {
         if (this.recorderSlices && this.recorderSlices > 0) {
-          this.Recorder.start(1000 * this.recorderSlices); //1 sec Slices
+          this.Recorder.start(1000 * this.recorderSlices); //1 * x sec Slices
         } else {
           this.Recorder.start(); //ohne slices
         }
@@ -665,7 +666,7 @@ export default defineComponent({
           <div class="peer" id="peer-audio">
             <div class="stat-value">
               <canvas class="peer_canvas rounded" id="canvas-audio" style="background-color: black; width: 268px"> </canvas
-              ><!-- das canvas wird über Programm gefüllt-->
+              ><!-- the canvas is filled via the programme-->
             </div>
           </div>
         </q-card-section>
