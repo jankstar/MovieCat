@@ -734,6 +734,7 @@ export default defineComponent({
           <q-slider v-model="PlayerPosition" :min="0" :max="RecoderBlobList.length > 0 ? RecoderBlobList.length - 1 : 0" label style="width: 90%" />
         </q-card-section>
         <q-card-actions class="tw-justify-end">
+          <!-- -->
           <q-btn v-if="!playOn" :label="$t('Play')" @click="playOnBtn" class="tw-bg-lime-300" icon="play_circle" />
           <q-btn v-if="playOn" :label="$t('Stop')" @click="playOffBtn" class="tw-bg-red-300" icon="stop_circle" />
         </q-card-actions>
