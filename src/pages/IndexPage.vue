@@ -73,7 +73,16 @@ export default defineComponent({
       RecorderState: "inactive",
 
       PlayerPosition: 0,
+      PlayerMuted: true,
       playOn: false,
+      playbackRate: 1,
+      playbackRateOptions: [
+        { value: 0.25, label: "1/4" },
+        { value: 0.5, label: "1/2" },
+        { value: 1, label: "1" },
+        { value: 2, label: "2" },
+        { value: 4, label: "4" },
+      ],
       TimeOutID: undefined,
       fileName: "test",
       OnOffOptions: [],
@@ -606,10 +615,11 @@ export default defineComponent({
       if (this.playOn == false && myVideoTag && this.RecoderBlobList && this.RecoderBlobList.length > 0 && this.recorderOptions.mimeType) {
         myVideoTag.pause(); //player stoppen
         myVideoTag.onloadedmetadata = () => {
-          console.log(`duration ${myVideoTag.duration}`);
+          console.log(`duration ${myVideoTag.duration} type of: ${typeof myVideoTag.duration}`);
         };
         myVideoTag.ontimeupdate = () => {
           console.log(`currentTime ${myVideoTag.currentTime.toFixed(2)} sec`);
+          that.PlayerPosition = myVideoTag.currentTime.toFixed(0);
         };
         myVideoTag.onended = () => {
           that.playOn = false;
@@ -621,8 +631,8 @@ export default defineComponent({
         var blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
         var url = window.URL.createObjectURL(blob);
         myVideoTag.src = url;
-        myVideoTag.currentTime =
-          this.RecoderInfoList ?? this.RecoderInfoList.length > 0 ? (this.RecoderInfoList[this.PlayerPosition].time - this.RecoderInfoList[0].time) / 1000 : 0;
+        myVideoTag.currentTime = this.PlayerPosition;
+        myVideoTag.playbackRate = this.playbackRate;
         myVideoTag.play();
       }
     },
@@ -633,6 +643,29 @@ export default defineComponent({
         myVideoTag.pause(); //player stoppen
       }
       this.playOn = false;
+    },
+    muteOnBtn() {
+      console.log(`muteOnBtn()`);
+      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
+      if (myVideoTag) {
+        this.PlayerMuted = true;
+        myVideoTag.muted = true;
+      }
+    },
+    muteOffBtn() {
+      console.log(`muteOffBtn()`);
+      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
+      if (myVideoTag) {
+        this.PlayerMuted = false;
+        myVideoTag.muted = false;
+      }
+    },
+    changePlaybackRate(value: any) {
+      console.log(`muteOffBtn()`);
+      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
+      if (myVideoTag) {
+        myVideoTag.playbackRate = value;
+      }
     },
   },
 });
@@ -695,8 +728,12 @@ export default defineComponent({
         <q-separator v-if="VideoSetting" />
 
         <q-card-actions v-if="selMode == 'camera' || selMode == 'capture'" class="tw-justify-end">
-          <q-btn v-if="!connectOn" :label="$t('Connect')" @click="startBtn" class="tw-bg-lime-300" icon="link" />
-          <q-btn v-if="connectOn" :label="$t('Disconnect')" @click="stopBtn" class="tw-bg-red-300" icon="link_off" />
+          <q-btn
+            :label="!connectOn ? $t('Connect') : $t('Disconnect')"
+            @click="!connectOn ? startBtn() : stopBtn()"
+            :class="!connectOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
+            :icon="!connectOn ? 'link' : 'link_off'"
+          />
         </q-card-actions>
       </q-card>
 
@@ -725,18 +762,38 @@ export default defineComponent({
           <video id="id_video_player" playsinline muted style="background-color: black"></video>
         </q-card-section>
         <q-card-section>
-          <h7 v-if="RecoderInfoList" class="text-body2"
-            >{{ $t("Time") }}:
-            {{ RecoderInfoList.length > 0 && PlayerPosition < RecoderInfoList.length ? ((RecoderInfoList[PlayerPosition].time - RecoderInfoList[0].time) / 1000).toFixed(2) : "0" }}
-            sec</h7
-          >
+          <h7 v-if="RecoderInfoList" class="text-body2">{{ $t("Time") }}: {{ PlayerPosition }} sec</h7>
           <br />
-          <q-slider v-model="PlayerPosition" :min="0" :max="RecoderBlobList.length > 0 ? RecoderBlobList.length - 1 : 0" label style="width: 90%" />
+          <q-slider
+            v-model="PlayerPosition"
+            :min="0"
+            :max="RecoderInfoList && RecoderInfoList.length > 0 ? (RecoderInfoList[RecoderInfoList.length - 1].time - RecoderInfoList[0].time) / 1000 : 0"
+            label
+            style="width: 90%"
+          />
+          <br />
+          <q-select
+            v-model="playbackRate"
+            :options="playbackRateOptions"
+            emit-value
+            map-options
+            :label="$t('PlaybackRate')"
+            style="width: 50%"
+            @update:model-value="changePlaybackRate"
+          />
         </q-card-section>
+        <q-separator />
+
         <q-card-actions class="tw-justify-end">
           <!-- -->
-          <q-btn v-if="!playOn" :label="$t('Play')" @click="playOnBtn" class="tw-bg-lime-300" icon="play_circle" />
-          <q-btn v-if="playOn" :label="$t('Stop')" @click="playOffBtn" class="tw-bg-red-300" icon="stop_circle" />
+          <q-btn :label="!PlayerMuted ? $t('Mute') : $t('Mute_off')" @click="!PlayerMuted ? muteOnBtn() : muteOffBtn()" :icon="!PlayerMuted ? 'volume_up' : 'volume_off'" />
+          <q-btn
+            :label="!playOn ? $t('Play') : $t('Stop')"
+            @click="!playOn ? playOnBtn() : playOffBtn()"
+            :icon="!playOn ? 'play_circle' : 'stop_circle'"
+            :class="!playOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
+            :disable="!RecoderBlobList || RecoderBlobList.length == 0"
+          />
         </q-card-actions>
       </q-card>
 
