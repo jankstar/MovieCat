@@ -11,7 +11,7 @@ export default defineComponent({
     return {
       //MediaDevices
       connectOn: false,
-      selMode: "off",
+      selMode: "capture",
       videoInput: [],
       videoInputValue: "default",
       audioInput: [],
@@ -71,6 +71,9 @@ export default defineComponent({
       RecoderInfoList: [],
       RecorderSize: 0,
       RecorderState: "inactive",
+
+      PlayerPosition: 0,
+      playOn: false,
       TimeOutID: undefined,
       fileName: "test",
       OnOffOptions: [],
@@ -442,6 +445,7 @@ export default defineComponent({
         }, 1000 * 60 * this.recorderAutoStop); //150 min = 2,5h
       }
     },
+    //
     stopRecorderBtn() {
       console.log(`stopRecorderBtn()`);
       this.stopRecorder();
@@ -477,6 +481,10 @@ export default defineComponent({
           window.URL.revokeObjectURL(url);
         }, 3000);
       }
+    },
+    //
+    upload() {
+      console.log(`upload()`);
     },
     //
     clearBuffer() {
@@ -591,6 +599,41 @@ export default defineComponent({
       draw();
     },
     //
+    playOnBtn() {
+      console.log(`playOnBtn()`);
+      let that = this;
+      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
+      if (this.playOn == false && myVideoTag && this.RecoderBlobList && this.RecoderBlobList.length > 0 && this.recorderOptions.mimeType) {
+        myVideoTag.pause(); //player stoppen
+        myVideoTag.onloadedmetadata = () => {
+          console.log(`duration ${myVideoTag.duration}`);
+        };
+        myVideoTag.ontimeupdate = () => {
+          console.log(`currentTime ${myVideoTag.currentTime.toFixed(2)} sec`);
+        };
+        myVideoTag.onended = () => {
+          that.playOn = false;
+        };
+        myVideoTag.onplay = () => {
+          that.playOn = true;
+        };
+        //        var url = window.URL.createObjectURL(this.RecoderBlobList[this.PlayerPosition]);
+        var blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
+        var url = window.URL.createObjectURL(blob);
+        myVideoTag.src = url;
+        myVideoTag.currentTime =
+          this.RecoderInfoList ?? this.RecoderInfoList.length > 0 ? (this.RecoderInfoList[this.PlayerPosition].time - this.RecoderInfoList[0].time) / 1000 : 0;
+        myVideoTag.play();
+      }
+    },
+    playOffBtn() {
+      console.log(`playOffBtn()`);
+      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
+      if (myVideoTag) {
+        myVideoTag.pause(); //player stoppen
+      }
+      this.playOn = false;
+    },
   },
 });
 </script>
@@ -604,7 +647,6 @@ export default defineComponent({
           <q-select
             v-model="selMode"
             :options="[
-              { label: $t('Off'), value: 'off' },
               { label: $t('Capture'), value: 'capture' },
               { label: $t('Camera'), value: 'camera' },
               { label: $t('File'), value: 'file' },
@@ -640,7 +682,7 @@ export default defineComponent({
           <h7 class="text-body2">{{ $t("EchoCancellation") }}: {{ AudioSetting && AudioSetting.echoCancellation == false ? $t("Off") : $t("On") }}</h7> <br />
           <h7 class="text-body2">{{ $t("SampleRate") }}: {{ AudioSetting ? (AudioSetting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</h7> <br />
         </q-card-section>
-        <q-separator />
+        <q-separator v-if="AudioSetting" />
         <q-card-section v-if="VideoSetting">
           <div class="row tw-justify-between">
             <h7 class="text-subtitle1">Video </h7>
@@ -650,16 +692,16 @@ export default defineComponent({
           <h7 class="text-body2">{{ $t("Resolution") }}: {{ VideoSetting ? `${VideoSetting.width}x${VideoSetting.height}` : "0x0" }}</h7> <br />
           <h7 class="text-body2">{{ $t("Frame_rate") }}: {{ VideoSetting ? VideoSetting.frameRate.toFixed(2) : "0" }}</h7> <br />
         </q-card-section>
-        <q-separator />
+        <q-separator v-if="VideoSetting" />
 
-        <q-card-actions v-if="selMode == 'camera' || selMode == 'capture'">
-          <q-btn v-if="!connectOn" :label="$t('Connect')" @click="startBtn" class="tw-bg-lime-300" />
-          <q-btn v-if="connectOn" :label="$t('Disconnect')" @click="stopBtn" class="tw-bg-red-300" />
+        <q-card-actions v-if="selMode == 'camera' || selMode == 'capture'" class="tw-justify-end">
+          <q-btn v-if="!connectOn" :label="$t('Connect')" @click="startBtn" class="tw-bg-lime-300" icon="link" />
+          <q-btn v-if="connectOn" :label="$t('Disconnect')" @click="stopBtn" class="tw-bg-red-300" icon="link_off" />
         </q-card-actions>
       </q-card>
 
-      <!-- audio / Video-->
-      <q-card v-if="selMode != 'off'" style="max-width: 300px">
+      <!-- input audio / Video-->
+      <q-card v-if="selMode == 'capture' || selMode == 'camera'" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }})</h7>
 
@@ -676,11 +718,37 @@ export default defineComponent({
         </q-card-section>
       </q-card>
 
+      <!-- play video from file/recorder -->
+      <q-card v-if="!connectOn && selMode == 'file'" style="max-width: 300px">
+        <q-card-section>
+          <h7 class="text-subtitle1">Video Player </h7> <br />
+          <video id="id_video_player" playsinline muted style="background-color: black"></video>
+        </q-card-section>
+        <q-card-section>
+          <h7 v-if="RecoderInfoList" class="text-body2"
+            >{{ $t("Time") }}:
+            {{ RecoderInfoList.length > 0 && PlayerPosition < RecoderInfoList.length ? ((RecoderInfoList[PlayerPosition].time - RecoderInfoList[0].time) / 1000).toFixed(2) : "0" }}
+            sec</h7
+          >
+          <br />
+          <q-slider v-model="PlayerPosition" :min="0" :max="RecoderBlobList.length > 0 ? RecoderBlobList.length - 1 : 0" label style="width: 90%" />
+        </q-card-section>
+        <q-card-actions class="tw-justify-end">
+          <q-btn v-if="!playOn" :label="$t('Play')" @click="playOnBtn" class="tw-bg-lime-300" icon="play_circle" />
+          <q-btn v-if="playOn" :label="$t('Stop')" @click="playOffBtn" class="tw-bg-red-300" icon="stop_circle" />
+        </q-card-actions>
+      </q-card>
+
       <!-- recorder -->
-      <q-card v-if="selMode == 'capture' || selMode == 'camera' || RecorderSize > 0" style="max-width: 300px">
+      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'file' || RecorderSize > 0" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
-          <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte</h7> <br />
+          <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte </h7>
+          <h7 v-if="RecoderInfoList" class="text-body2"
+            >{{ $t("Time") }}:
+            {{ RecoderInfoList.length > 0 ? ((RecoderInfoList[RecoderInfoList.length - 1].time - RecoderInfoList[0].time) / 1000).toFixed(2) : "0" }}
+            sec</h7
+          ><br />
 
           <q-select
             v-model="recorderOptions.mimeType"
@@ -688,66 +756,77 @@ export default defineComponent({
             emit-value
             map-options
             :label="$t('Recorder_mimetype')"
-            :disable="mimeTypeOptions.length > 0 && RecorderState != 'inactive'"
+            :disable="mimeTypeOptions.length == 0 || RecorderSize > 0 || RecorderState != 'inactive'"
           />
-          <div class="row">
-            <q-select
-              v-model="recorderOptions.audioBitsPerSecond"
-              :options="audioBPSOptions"
-              emit-value
-              map-options
-              :label="$t('Audio_BPS')"
-              :disable="RecorderState != 'inactive'"
-              style="width: 50%"
-            />
-            <q-select
-              v-model="recorderOptions.videoBitsPerSecond"
-              :options="videoBPSOptions"
-              emit-value
-              map-options
-              :label="$t('Video_BPS')"
-              :disable="RecorderState != 'inactive'"
-              style="width: 50%"
-            />
-          </div>
-          <div class="row">
-            <q-select
-              v-model="recorderSlices"
-              :options="recorderSlicesOptions"
-              emit-value
-              map-options
-              :label="$t('Slice_length')"
-              :disable="RecorderState != 'inactive'"
-              style="width: 50%"
-            />
-            <q-input
-              v-model="recorderAutoStop"
-              :label="$t('Auto_stop')"
-              :disable="RecorderState != 'inactive'"
-              type="number"
-              mask="###"
-              fill-mask="#"
-              reverse-fill-mask
-              style="width: 50%"
-              :rules="[(val) => !!val || '* Required', (val) => val > 0 || 'The minimum is 1 min', (val) => val < 151 || 'The maximum is 150 min']"
-            />
+          <div v-if="selMode == 'capture' || selMode == 'camera'">
+            <div class="row">
+              <q-select
+                v-model="recorderOptions.audioBitsPerSecond"
+                :options="audioBPSOptions"
+                emit-value
+                map-options
+                :label="$t('Audio_BPS')"
+                :disable="RecorderState != 'inactive'"
+                style="width: 50%"
+              />
+              <q-select
+                v-model="recorderOptions.videoBitsPerSecond"
+                :options="videoBPSOptions"
+                emit-value
+                map-options
+                :label="$t('Video_BPS')"
+                :disable="RecorderState != 'inactive'"
+                style="width: 50%"
+              />
+            </div>
+            <div class="row">
+              <q-select
+                v-model="recorderSlices"
+                :options="recorderSlicesOptions"
+                emit-value
+                map-options
+                :label="$t('Slice_length')"
+                :disable="RecorderState != 'inactive'"
+                style="width: 50%"
+              />
+              <q-input
+                v-model="recorderAutoStop"
+                :label="$t('Auto_stop')"
+                :disable="RecorderState != 'inactive'"
+                type="number"
+                mask="###"
+                fill-mask="#"
+                reverse-fill-mask
+                style="width: 50%"
+                :rules="[(val) => !!val || '* Required', (val) => val > 0 || 'The minimum is 1 min', (val) => val < 151 || 'The maximum is 150 min']"
+              />
+            </div>
           </div>
           <q-input v-model="fileName" :label="$t('Filename')" />
         </q-card-section>
         <q-separator />
 
-        <q-card-actions>
+        <q-card-actions class="tw-justify-end tw-gap-2">
           <q-btn
-            v-if="RecorderState == 'inactive'"
+            v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')"
             label="Rec on"
+            icon="videocam"
             @click="startRecorderBtn"
             :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 150"
             class="tw-bg-lime-300"
           />
-          <q-btn v-else label="Rec off" @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !connectOn" class="tw-bg-red-300" />
+          <q-btn
+            v-else-if="selMode == 'capture' || selMode == 'camera'"
+            label="Rec off"
+            icon="videocam_off"
+            @click="stopRecorderBtn"
+            :disable="RecorderState == 'inactive' || !connectOn"
+            class="tw-bg-red-300"
+          />
           <!--div v-if="RecorderSize != 0 && RecorderState == 'inactive'"-->
-          <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" />
-          <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" />
+          <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="download" />
+          <q-btn v-if="selMode == 'file'" label="upload" @click="upload" icon="upload" />
+          <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="delete_forever" />
           <!--/div-->
         </q-card-actions>
       </q-card>
@@ -772,9 +851,9 @@ export default defineComponent({
           </q-card-section>
           <q-separator />
 
-          <q-card-actions>
-            <q-btn @click="AudioSettingDialog = false" class="tw-bg-red-300">{{ $t("Cancel") }}</q-btn>
-            <q-btn @click="AudioSettingChangeBtn" class="tw-bg-lime-300">{{ $t("Save") }}</q-btn>
+          <q-card-actions class="tw-justify-end">
+            <q-btn @click="AudioSettingDialog = false" class="tw-bg-red-300" icon="close">{{ $t("Cancel") }}</q-btn>
+            <q-btn @click="AudioSettingChangeBtn" class="tw-bg-lime-300" icon="done">{{ $t("Save") }}</q-btn>
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -803,9 +882,9 @@ export default defineComponent({
           </q-card-section>
           <q-separator />
 
-          <q-card-actions>
-            <q-btn @click="VideoSettingDialog = false" class="tw-bg-red-300">{{ $t("Cancel") }}</q-btn>
-            <q-btn @click="VideoSettingChangeBtn" class="tw-bg-lime-300">{{ $t("Save") }}</q-btn>
+          <q-card-actions class="tw-justify-end">
+            <q-btn @click="VideoSettingDialog = false" class="tw-bg-red-300" icon="close">{{ $t("Cancel") }}</q-btn>
+            <q-btn @click="VideoSettingChangeBtn" class="tw-bg-lime-300" icon="done">{{ $t("Save") }}</q-btn>
           </q-card-actions>
         </q-card>
       </q-dialog>

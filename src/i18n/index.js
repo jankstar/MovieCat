@@ -10,6 +10,7 @@ export default {
     "Mode": "Mode",
     "Capture": "capture",
     "Camera": "camera",
+    "File": "file - player",
     "Video_Input": "Video Input",
     "Audio_Input": "Audio Input",
     "Video_off": "Video off",
@@ -33,6 +34,7 @@ export default {
     "VideoEnabled": "Video Enabled",
     "Filename": "Filename",
     "Size": "Size:",
+    "Time": "Time",
   },
   //
   'de-DE': {
@@ -46,6 +48,7 @@ export default {
     "Mode": "Modus",
     "Capture": "Bildschirm",
     "Camera": "Kamera",
+    "File": "Datei - Player",
     "Video_Input": "Video Eingang",
     "Audio_Input": "Audio Eingang",
     "Video_off": "Video aus",
@@ -69,5 +72,6 @@ export default {
     "VideoEnabled": "Video aktiv",
     "Filename": "Dateiname",
     "Size": "Größe:",
+    "Time": "Zeit",
   }
 }
