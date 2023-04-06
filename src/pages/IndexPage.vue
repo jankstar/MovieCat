@@ -39,6 +39,7 @@ export default defineComponent({
       },
       audioBPSOptions: [
         { value: 32000, label: "32kbit/s" },
+        { value: 44000, label: "44kbit/s" },
         { value: 48000, label: "48kbit/s" },
         { value: 64000, label: "64kbit/s" },
         { value: 128000, label: "128kbit/s" },
@@ -52,9 +53,9 @@ export default defineComponent({
       ],
       mimeTypeOptions: [],
       // eslint-disable-next-line no-undef
-      RecorderOption: <MediaRecorderOptions>{
-        mimeType: "",
-      },
+      //RecorderOption: <MediaRecorderOptions>{
+      //  mimeType: "",
+      //},
       recorderSlices: 10, //in sec
       recorderSlicesOptions: [
         { value: 1, label: "1 sec" },
@@ -76,6 +77,7 @@ export default defineComponent({
       PlayerMuted: true,
       playOn: false,
       playbackRate: 1,
+      durationPlayer: 0,
       playbackRateOptions: [
         { value: 0.25, label: "1/4" },
         { value: 0.5, label: "1/2" },
@@ -94,13 +96,19 @@ export default defineComponent({
   },
 
   async mounted() {
-    console.log(`mounted`);
-    this.OnOffOptions = [
-      { value: true, label: this.$t("On") },
-      { value: false, label: this.$t("Off") },
-    ];
-    await this.getMediaDevices();
-    this.getMimeType();
+    try {
+      console.log(`mounted`);
+      this.OnOffOptions = [
+        { value: true, label: this.$t("On") },
+        { value: false, label: this.$t("Off") },
+      ];
+      await this.getMediaDevices();
+      this.getMimeType();
+      //recorder data from localStorage
+      this.loadRecorderData();
+    } catch (e) {
+      console.error(e);
+    }
   },
 
   updated() {
@@ -112,6 +120,53 @@ export default defineComponent({
   },
 
   methods: {
+    //
+    saveRecorderData() {
+      console.log(`saveRecorderData()`);
+
+      localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
+      localStorage.setItem("recorderSlices", JSON.stringify(this.recorderSlices));
+      localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
+      localStorage.setItem("fileName", JSON.stringify(this.fileName));
+    },
+    loadRecorderData() {
+      console.log(`loadRecorderData()`);
+      try {
+        const JSONrecorderOptions = localStorage.getItem("recorderOptions");
+        if (JSONrecorderOptions) {
+          let recorderOptions = JSON.parse(JSONrecorderOptions);
+          if (recorderOptions) {
+            this.recorderOptions = recorderOptions;
+          }
+        }
+
+        const JSONrecorderSlices = localStorage.getItem("recorderSlices");
+        if (JSONrecorderOptions) {
+          let recorderSlices = JSON.parse(JSONrecorderSlices);
+          if (recorderSlices) {
+            this.recorderSlices = recorderSlices;
+          }
+        }
+
+        const JSONrecorderAutoStop = localStorage.getItem("recorderAutoStop");
+        if (JSONrecorderAutoStop) {
+          let recorderAutoStop = JSON.parse(JSONrecorderAutoStop);
+          if (recorderAutoStop) {
+            this.recorderAutoStop = recorderAutoStop;
+          }
+        }
+
+        const JSONfileName = localStorage.getItem("fileName");
+        if (JSONfileName) {
+          let fileName = JSON.parse(JSONfileName);
+          if (fileName) {
+            this.fileName = fileName;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    },
     //
     async startBtn() {
       let that = this;
@@ -330,7 +385,7 @@ export default defineComponent({
           console.log(`type: ${e.type} time: ${e.timecode} size: ${e.data.size}`);
           if (e.data && e.data.size > 0) {
             that.RecoderBlobList.push(e.data);
-            that.RecoderInfoList.push({ type: e.type, time: e.timecode, size: e.data.size });
+            that.RecoderInfoList.push({ type: e.type, time: Date.now(), size: e.data.size });
             that.RecorderSize += e.data.size;
           }
         };
@@ -611,15 +666,30 @@ export default defineComponent({
     playOnBtn() {
       console.log(`playOnBtn()`);
       let that = this;
+      this.durationPlayer = 0;
+      if (this.RecoderInfoList.length > 0) {
+        this.durationPlayer = (this.RecoderInfoList[this.RecoderInfoList.length - 1].time - this.RecoderInfoList[0].time) / 1000;
+      }
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
       if (this.playOn == false && myVideoTag && this.RecoderBlobList && this.RecoderBlobList.length > 0 && this.recorderOptions.mimeType) {
         myVideoTag.pause(); //player stoppen
+        //
         myVideoTag.onloadedmetadata = () => {
-          console.log(`duration ${myVideoTag.duration} type of: ${typeof myVideoTag.duration}`);
+          console.log("onloadedmetadata()");
+          that.durationPlayer = Number.isFinite(myVideoTag.duration) ? myVideoTag.duration : that.durationPlayer;
+          console.log("Duration change", that.durationPlayer);
+        };
+        myVideoTag.ondurationchange = () => {
+          console.log("ondurationchange()");
+          that.durationPlayer = Number.isFinite(myVideoTag.duration) ? myVideoTag.duration : that.durationPlayer;
+          console.log("Duration change", that.durationPlayer);
         };
         myVideoTag.ontimeupdate = () => {
           console.log(`currentTime ${myVideoTag.currentTime.toFixed(2)} sec`);
-          that.PlayerPosition = myVideoTag.currentTime.toFixed(0);
+          that.PlayerPosition = myVideoTag.currentTime ? myVideoTag.currentTime.toFixed(0) : 0;
+          if (that.durationPlayer < that.PlayerPosition) {
+            that.durationPlayer = that.PlayerPosition + 1;
+          }
         };
         myVideoTag.onended = () => {
           that.playOn = false;
@@ -627,9 +697,10 @@ export default defineComponent({
         myVideoTag.onplay = () => {
           that.playOn = true;
         };
+        //
         //        var url = window.URL.createObjectURL(this.RecoderBlobList[this.PlayerPosition]);
-        var blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
-        var url = window.URL.createObjectURL(blob);
+        let blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
+        let url = window.URL.createObjectURL(blob);
         myVideoTag.src = url;
         myVideoTag.currentTime = this.PlayerPosition;
         myVideoTag.playbackRate = this.playbackRate;
@@ -682,7 +753,7 @@ export default defineComponent({
             :options="[
               { label: $t('Capture'), value: 'capture' },
               { label: $t('Camera'), value: 'camera' },
-              { label: $t('File'), value: 'file' },
+              { label: $t('Player'), value: 'player' },
             ]"
             emit-value
             map-options
@@ -756,7 +827,7 @@ export default defineComponent({
       </q-card>
 
       <!-- play video from file/recorder -->
-      <q-card v-if="!connectOn && selMode == 'file'" style="max-width: 300px">
+      <q-card v-if="!connectOn && selMode == 'player'" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">Video Player </h7> <br />
           <video id="id_video_player" playsinline muted style="background-color: black"></video>
@@ -764,13 +835,7 @@ export default defineComponent({
         <q-card-section>
           <h7 v-if="RecoderInfoList" class="text-body2">{{ $t("Time") }}: {{ PlayerPosition }} sec</h7>
           <br />
-          <q-slider
-            v-model="PlayerPosition"
-            :min="0"
-            :max="RecoderInfoList && RecoderInfoList.length > 0 ? (RecoderInfoList[RecoderInfoList.length - 1].time - RecoderInfoList[0].time) / 1000 : 0"
-            label
-            style="width: 90%"
-          />
+          <q-slider v-model="PlayerPosition" :min="0" :max="durationPlayer" label style="width: 90%" />
           <br />
           <q-select
             v-model="playbackRate"
@@ -798,7 +863,7 @@ export default defineComponent({
       </q-card>
 
       <!-- recorder -->
-      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'file' || RecorderSize > 0" style="max-width: 300px">
+      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || RecorderSize > 0" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
           <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte </h7>
@@ -826,6 +891,7 @@ export default defineComponent({
                 :label="$t('Audio_BPS')"
                 :disable="RecorderState != 'inactive'"
                 style="width: 50%"
+                @update:model-value="saveRecorderData"
               />
               <q-select
                 v-model="recorderOptions.videoBitsPerSecond"
@@ -835,6 +901,7 @@ export default defineComponent({
                 :label="$t('Video_BPS')"
                 :disable="RecorderState != 'inactive'"
                 style="width: 50%"
+                @update:model-value="saveRecorderData"
               />
             </div>
             <div class="row">
@@ -846,6 +913,7 @@ export default defineComponent({
                 :label="$t('Slice_length')"
                 :disable="RecorderState != 'inactive'"
                 style="width: 50%"
+                @update:model-value="saveRecorderData"
               />
               <q-input
                 v-model="recorderAutoStop"
@@ -857,6 +925,7 @@ export default defineComponent({
                 reverse-fill-mask
                 style="width: 50%"
                 :rules="[(val) => !!val || '* Required', (val) => val > 0 || 'The minimum is 1 min', (val) => val < 151 || 'The maximum is 150 min']"
+                @update:model-value="saveRecorderData"
               />
             </div>
           </div>
@@ -883,7 +952,7 @@ export default defineComponent({
           />
           <!--div v-if="RecorderSize != 0 && RecorderState == 'inactive'"-->
           <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="download" />
-          <q-btn v-if="selMode == 'file'" label="upload" @click="upload" icon="upload" />
+          <q-btn v-if="selMode == 'player'" label="upload" @click="upload" icon="upload" />
           <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="delete_forever" />
           <!--/div-->
         </q-card-actions>
