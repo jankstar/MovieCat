@@ -1,8 +1,10 @@
 <template>
   <q-layout view="hHh lpR fFf" class="tw-font-sans">
     <q-header elevated>
-      <q-toolbar class="bg-primary text-white rounded-borders">
-        <q-btn flat dense round icon="info" aria-label="Menu" @click="info" />
+      <q-toolbar class="bg-primary text-white rounded-borders tw-bg-blue-600">
+        <q-btn flat dense round icon="info" aria-label="Menu" @click="info"> <q-tooltip class="tw-bg-blue-400">Info about MovieCat</q-tooltip></q-btn>
+        <q-btn flat dense round icon="policy" aria-label="Policy" @click="policy"> <q-tooltip class="tw-bg-blue-400">Info about Privacy Policy</q-tooltip></q-btn>
+
         <q-icon name="img:icons/icon-256x256.png" size="24px" />
         <q-toolbar-title> MovieCat 0.2.0</q-toolbar-title>
         <q-select
@@ -57,6 +59,15 @@ export default defineComponent({
         this.$router.push("/");
       } else {
         this.$router.push("moviecat");
+      }
+    },
+    //
+    policy() {
+      console.log(`policy()`);
+      if (window.location.hash.includes("privacypolicy")) {
+        this.$router.push("/");
+      } else {
+        this.$router.push("privacypolicy");
       }
     },
   },

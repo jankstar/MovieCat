@@ -5,7 +5,9 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') },
-      { path: 'moviecat', component: () => import('pages/MovieCat.vue') }
+      { path: 'moviecat', component: () => import('pages/MovieCat.vue') },
+      { path: 'privacypolicy', component: () => import('pages/PrivacyPolicy.vue') }
+
     ]
   },
 

@@ -52,6 +52,8 @@ export default defineComponent({
             fontFamily: ChakraPetch, Merriweather<br />
             This Font Software is licensed under the SIL Open Font License, Version 1.1. <br />
             <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a>
+            GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a><br />
+            <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c) 2023 jankstar</a>
           </h7>
         </q-card-section>
         <q-separator />

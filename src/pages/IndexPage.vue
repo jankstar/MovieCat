@@ -128,7 +128,7 @@ export default defineComponent({
       localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
       localStorage.setItem("recorderSlices", JSON.stringify(this.recorderSlices));
       localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
-      localStorage.setItem("fileName", JSON.stringify(this.fileName));
+      //localStorage.setItem("fileName", JSON.stringify(this.fileName));
     },
     loadRecorderData() {
       console.log(`loadRecorderData()`);
@@ -157,13 +157,13 @@ export default defineComponent({
           }
         }
 
-        const JSONfileName = localStorage.getItem("fileName");
-        if (JSONfileName) {
-          let fileName = JSON.parse(JSONfileName);
-          if (fileName) {
-            this.fileName = fileName;
-          }
-        }
+        // const JSONfileName = localStorage.getItem("fileName");
+        // if (JSONfileName) {
+        //   let fileName = JSON.parse(JSONfileName);
+        //   if (fileName) {
+        //     this.fileName = fileName;
+        //   }
+        // }
       } catch (e) {
         console.error(e);
       }
@@ -959,7 +959,7 @@ export default defineComponent({
           />
           <!--div v-if="RecorderSize != 0 && RecorderState == 'inactive'"-->
           <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="download" />
-          <q-btn v-if="selMode == 'player'" label="upload" @click="upload" icon="upload" />
+          <!--q-btn v-if="selMode == 'player'" label="upload" @click="upload" icon="upload" /-->
           <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="delete_forever" />
           <!--/div-->
         </q-card-actions>
