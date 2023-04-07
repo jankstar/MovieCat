@@ -9,6 +9,7 @@ export default defineComponent({
 
   data: () => {
     return {
+      $t: undefined,
       //MediaDevices
       connectOn: false,
       selMode: "capture",
@@ -73,11 +74,11 @@ export default defineComponent({
       RecorderSize: 0,
       RecorderState: "inactive",
 
-      PlayerPosition: 0,
+      PlayerPosition: 0, //Attention only integer in sec !
+      durationPlayer: 0, //Attention only integer in sec !
       PlayerMuted: true,
       playOn: false,
       playbackRate: 1,
-      durationPlayer: 0,
       playbackRateOptions: [
         { value: 0.25, label: "1/4" },
         { value: 0.5, label: "1/2" },
@@ -668,7 +669,7 @@ export default defineComponent({
       let that = this;
       this.durationPlayer = 0;
       if (this.RecoderInfoList.length > 0) {
-        this.durationPlayer = (this.RecoderInfoList[this.RecoderInfoList.length - 1].time - this.RecoderInfoList[0].time) / 1000;
+        this.durationPlayer = ((this.RecoderInfoList[this.RecoderInfoList.length - 1].time - this.RecoderInfoList[0].time) / 1000).toFixed(0);
       }
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
       if (this.playOn == false && myVideoTag && this.RecoderBlobList && this.RecoderBlobList.length > 0 && this.recorderOptions.mimeType) {
@@ -676,12 +677,12 @@ export default defineComponent({
         //
         myVideoTag.onloadedmetadata = () => {
           console.log("onloadedmetadata()");
-          that.durationPlayer = Number.isFinite(myVideoTag.duration) ? myVideoTag.duration : that.durationPlayer;
+          that.durationPlayer = Number.isFinite(myVideoTag.duration) ? myVideoTag.duration.toFixed(0) : that.durationPlayer;
           console.log("Duration change", that.durationPlayer);
         };
         myVideoTag.ondurationchange = () => {
           console.log("ondurationchange()");
-          that.durationPlayer = Number.isFinite(myVideoTag.duration) ? myVideoTag.duration : that.durationPlayer;
+          that.durationPlayer = Number.isFinite(myVideoTag.duration) ? myVideoTag.duration.toFixed(0) : that.durationPlayer;
           console.log("Duration change", that.durationPlayer);
         };
         myVideoTag.ontimeupdate = () => {
@@ -741,13 +742,13 @@ export default defineComponent({
   },
 });
 </script>
+
 <template>
   <q-page class="q-pa-md">
     <div class="tw-grid-flow tw-items-start row tw-gap-4">
       <!-- input and mode -->
       <q-card style="min-width: 150px; max-width: 300px">
         <q-card-section>
-          <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</h7> <br />
           <q-select
             v-model="selMode"
             :options="[
@@ -760,7 +761,13 @@ export default defineComponent({
             :label="$t('Mode')"
             :disable="connectOn"
           />
-
+          <br />
+        </q-card-section>
+        <q-separator v-if="selMode == 'capture' || selMode == 'camera'" />
+        <q-card-section>
+          <div v-if="selMode == 'capture' || selMode == 'camera'">
+            <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</h7> <br />
+          </div>
           <q-select v-if="selMode == 'camera'" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="connectOn" />
           <q-select
             v-if="selMode == 'camera' || selMode == 'capture'"

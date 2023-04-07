@@ -10,6 +10,6 @@ export default ({ app }) => {
     messages
   })
 
-  // Tell app to use the I18n instance
+  // Tell app to use the i18n instance
   app.use(i18n)
 }

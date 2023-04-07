@@ -12,6 +12,7 @@ export default defineComponent({
     const $q = useQuasar();
     return {
       $q,
+      $t: undefined,
     };
   },
 });

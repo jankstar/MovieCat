@@ -3,8 +3,8 @@
     <q-header elevated>
       <q-toolbar class="bg-primary text-white rounded-borders">
         <q-btn flat dense round icon="info" aria-label="Menu" @click="info" />
-        <q-icon name="img:icons/favicon-256x256.png" size="24px" />
-        <q-toolbar-title> MovieCat </q-toolbar-title>
+        <q-icon name="img:icons/icon-256x256.png" size="24px" />
+        <q-toolbar-title> MovieCat 0.2.0</q-toolbar-title>
         <q-select
           v-model="$i18n.locale"
           :options="localeOptions"

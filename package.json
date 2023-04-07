@@ -1,6 +1,6 @@
 {
   "name": "moviecat",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Record from camera or screen and save as a movie.",
   "productName": "MovieCat",
   "author": "jankstar <jankstar.berlin@gmail.com>",
@@ -19,7 +19,7 @@
     "eslint-plugin-typescript": "^0.14.0",
     "quasar": "^2.11.10",
     "vue": "^3.0.0",
-    "vue-i18n": "^9.3.0-beta.16",
+    "vue-i18n": "^9.2.2",
     "vue-router": "^4.0.0"
   },
   "devDependencies": {
@@ -41,7 +41,7 @@
     "workbox-strategies": "^6.5.4"
   },
   "engines": {
-    "node": "^18 || ^16 || ^14.19",
+    "node": "^19 || ^18 || ^16 || ^14.19",
     "npm": ">= 6.13.4"
   }
 }
