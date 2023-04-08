@@ -8,7 +8,7 @@
   "scripts": {
     "build": "env GOOS=linux GOARCH=amd64 go build -o server main.go && quasar build -m pwa",
     "start": "/home/site/wwwroot/server",
-    "dev": "env PORT=8081 go run main.go & quasar dev -m pwa",
+    "dev": "env PORT=8081 go run main.go & quasar -m pwa -d",
     "lint": "eslint --ext .js,.ts,.vue ./",
     "format": "prettier --write \"**/*.{ts,js,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0"

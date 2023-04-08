@@ -38,6 +38,10 @@ export default {
     "Filename": "Filename",
     "Size": "Size:",
     "Time": "Time",
+
+    "InfoMovieCat": "Info about MovieCat",
+    "InfoToggle": "Toggle dark and light mode.",
+    "InfoPrivacyPolicy": "Info about Privacy Policy",
   },
   //
   'de-DE': {
@@ -79,5 +83,10 @@ export default {
     "Filename": "Dateiname",
     "Size": "Größe:",
     "Time": "Zeit",
+
+    "InfoMovieCat": "Info über MovieCat",
+    "InfoToggle": "Umschalten zwischen Hell und Dunkel.",
+    "InfoPrivacyPolicy": "Info über Datenschutz",
+
   }
 }

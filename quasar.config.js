@@ -152,7 +152,7 @@ module.exports = configure(function (/* ctx */) {
       swFilename: 'sw.js',
       manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
-      useFilenameHashes: false, //true, // by default
+      useFilenameHashes: true, // by default
       // extendGenerateSWOptions (cfg) {}
       // extendInjectManifestOptions (cfg) {},
       // extendManifestJson (json) {}
