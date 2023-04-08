@@ -746,7 +746,7 @@ export default defineComponent({
       l_time = Math.trunc(iDuration / 60);
       let l_min = (l_time % 60).toFixed(0);
       l_min = l_min.length > 1 ? l_min : `0${l_min}`;
-      let l_std = (l_time / 3600).toFixed(0);
+      let l_std = (l_time / 60).toFixed(0);
       l_std = l_std.length > 1 ? l_std : `0${l_std}`;
       return `${l_std}:${l_min}:${l_sec}`;
     },
@@ -851,7 +851,7 @@ export default defineComponent({
           <video id="id_video_player" playsinline muted style="background-color: black"></video>
         </q-card-section>
         <q-card-section>
-          <h7 v-if="RecoderInfoList" class="text-body2">{{ $t("Time") }}: {{ PlayerPosition }} sec</h7>
+          <h7 v-if="RecoderInfoList" class="text-body2">{{ $t("Time") }}: {{ computeTime(PlayerPosition) }}</h7>
           <br />
           <q-slider v-model="PlayerPosition" :min="0" :max="durationPlayer" label style="width: 90%" />
           <br />
@@ -884,17 +884,12 @@ export default defineComponent({
       <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || RecorderSize > 0" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
-          <div class="tw-grid tw-gap-4 tw-grid-cols-2">
-            <div>
-              <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte </h7>
-            </div>
-            <div>
-              <h7 class="text-body2"
-                >{{ $t("Time") }}:
-                {{ RecoderInfoList && RecoderInfoList.length > 0 ? computeTime((RecoderInfoList[RecoderInfoList.length - 1].time - RecoderInfoList[0].time) / 1000) : "00:00:00" }}
-              </h7>
-            </div>
-          </div>
+
+          <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte</h7><br />
+          <h7 class="text-body2"
+            >{{ $t("Time") }}:
+            {{ RecoderInfoList && RecoderInfoList.length > 0 ? computeTime((RecoderInfoList[RecoderInfoList.length - 1].time - RecoderInfoList[0].time) / 1000) : "00:00:00" }}
+          </h7>
 
           <q-select
             v-model="recorderOptions.mimeType"

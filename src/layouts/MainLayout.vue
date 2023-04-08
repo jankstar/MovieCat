@@ -13,7 +13,15 @@ export default defineComponent({
       ],
     };
   },
-  mounted() {},
+  mounted() {
+    const JSONi18n_locale = localStorage.getItem("i18n_locale");
+    if (JSONi18n_locale) {
+      let i18n_locale = JSON.parse(JSONi18n_locale);
+      if (i18n_locale) {
+        this.$i18n.locale = i18n_locale;
+      }
+    }
+  },
   computed: {
     isValid() {
       return true;
@@ -36,6 +44,10 @@ export default defineComponent({
       } else {
         this.$router.push("privacypolicy");
       }
+    },
+    saveLanguData() {
+      console.log(`saveLanguData()`);
+      localStorage.setItem("i18n_locale", JSON.stringify(this.$i18n.locale));
     },
   },
 });
@@ -65,6 +77,7 @@ export default defineComponent({
           options-dense
           style="min-width: 100px"
           :popup-content-style="{ backgroundColor: '#99ccff' }"
+          @update:model-value="saveLanguData"
         />
         <q-btn
           flat
