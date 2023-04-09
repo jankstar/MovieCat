@@ -176,9 +176,9 @@ export default defineComponent({
     async connectOnBtn() {
       let that = this;
       console.log(`connectOnBtn(e)`);
-      if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
-        this.$q.notify({ type: "warning", message: this.$t("InfoRecorderMemory"), position: "center", timeout: 5000 });
-      }
+      //      if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
+      //        this.$q.notify({ type: "warning", message: this.$t("InfoRecorderMemory"), position: "center", timeout: 5000 });
+      //      }
 
       //this.RecorderBlobList = [];
       //this.RecorderInfoList = [];
@@ -188,7 +188,7 @@ export default defineComponent({
         await this.startDisplayMedia();
         if (this.MainStream && this.MainStream.active) {
           this.MainStream.oninactive = () => {
-            that.stopBtn();
+            that.connectOffBtn();
           };
           myVideoTag.srcObject = this.MainStream;
           this.connectOn = true;
@@ -300,7 +300,7 @@ export default defineComponent({
         })
         .catch((err) => {
           console.error(`${err.name}: ${err.message}`);
-          //$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
+          this.$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
         });
     },
     //
@@ -345,6 +345,7 @@ export default defineComponent({
         if (lTracks && lTracks.length > 0 && lTracks[0]) {
           this.VideoSetting = lTracks[0].getSettings();
           this.VideoSetting.enabled = lTracks[0].enabled;
+          console.log("video getSettings()", JSON.stringify(this.VideoSetting));
           console.log("video getCapabilities()", JSON.stringify(lTracks[0].getCapabilities()));
         }
 
@@ -365,6 +366,7 @@ export default defineComponent({
         if (lTracks && lTracks.length > 0 && lTracks[0]) {
           this.AudioSetting = lTracks[0].getSettings();
           this.AudioSetting.muted = lTracks[0].muted || !lTracks[0].enabled;
+          console.log("audio getSettings()", JSON.stringify(this.AudioSetting));
           console.log("audio getCapabilities()", JSON.stringify(lTracks[0].getCapabilities()));
           this.drawCanvas("audio");
         }
