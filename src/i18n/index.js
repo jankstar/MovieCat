@@ -42,6 +42,7 @@ export default {
     "InfoMovieCat": "Info about MovieCat",
     "InfoToggle": "Toggle dark and light mode.",
     "InfoPrivacyPolicy": "Info about Privacy Policy",
+    "InfoRecordeMemory": "Recorder memory still contains data."
   },
   //
   'de-DE': {
@@ -87,6 +88,7 @@ export default {
     "InfoMovieCat": "Info über MovieCat",
     "InfoToggle": "Umschalten zwischen Hell und Dunkel.",
     "InfoPrivacyPolicy": "Info über Datenschutz",
+    "InfoRecorderMemory": "Recorder memory enthält noch Daten."
 
   }
 }

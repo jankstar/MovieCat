@@ -1,5 +1,6 @@
 <script>
 import { defineComponent } from "vue";
+import { version } from "../../package.json";
 
 export default defineComponent({
   name: "MainLayout",
@@ -11,6 +12,7 @@ export default defineComponent({
         { value: "en-US", label: "English" },
         { value: "de-DE", label: "Deutsch" },
       ],
+      version: version,
     };
   },
   mounted() {
@@ -78,7 +80,7 @@ export default defineComponent({
         >
 
         <q-icon name="img:icons/icon-256x256.png" size="24px" />
-        <q-toolbar-title> MovieCat 0.2.1</q-toolbar-title>
+        <q-toolbar-title> MovieCat {{ version }}</q-toolbar-title>
         <q-select
           v-model="$i18n.locale"
           :options="localeOptions"

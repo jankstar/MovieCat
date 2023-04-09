@@ -1,12 +1,12 @@
 {
   "name": "moviecat",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Record from camera or screen and save as a movie.",
   "productName": "MovieCat",
   "author": "jankstar <jankstar.berlin@gmail.com>",
   "private": true,
   "scripts": {
-    "build": "env GOOS=linux GOARCH=amd64 go build -o server main.go && quasar build -m pwa",
+    "build": "env GOOS=linux GOARCH=amd64 go build -o server main.go && quasar build -m pwa --resolveJsonModule",
     "start": "/home/site/wwwroot/server",
     "dev": "env PORT=8081 go run main.go & quasar -m pwa -d",
     "lint": "eslint --ext .js,.ts,.vue ./",

@@ -1,6 +1,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useQuasar } from "quasar";
+//eslint-disable-next-line no-use-before-define
+import { version } from "../../package.json";
 
 export default defineComponent({
   name: "MovieCat",
@@ -10,9 +12,12 @@ export default defineComponent({
 
   data: () => {
     const $q = useQuasar();
+
     return {
       $q,
       $t: undefined,
+      // eslint-disable-next-line no-undef
+      version: version,
     };
   },
 });
@@ -26,14 +31,14 @@ export default defineComponent({
           <h5><b>MovieCat</b></h5>
           <h7 v-if="langu == 'de-DE'">
             <br />
-            Version: 0.1.0 <br />
+            Version: {{ version }} <br />
             Beschreibung: <br />
             Aufzeichnung eines Films von einer Kamera oder Bildschirm und sichern als Datei.
             <br />
           </h7>
           <h7 v-else>
             <br />
-            Version: 0.1.0 <br />
+            Version: {{ version }}<br />
             Description: <br />
             Record a movie from a camera or screen and save it as a file.
             <br />

@@ -13,6 +13,7 @@ export default defineComponent({
       //MediaDevices
       connectOn: false,
       selMode: "capture",
+      SupportedConstraints: undefined,
       videoInput: [],
       videoInputValue: "default",
       audioInput: [],
@@ -104,6 +105,8 @@ export default defineComponent({
         { value: false, label: this.$t("Off") },
       ];
       await this.getMediaDevices();
+      this.SupportedConstraints = navigator.mediaDevices.getSupportedConstraints();
+      console.log(`SupportedConstraints: ${JSON.stringify(this.SupportedConstraints)}`);
       this.getMimeType();
       //recorder data from localStorage
       this.loadRecorderData();
@@ -169,12 +172,16 @@ export default defineComponent({
       }
     },
     //
-    async startBtn() {
+    async connectOnBtn() {
       let that = this;
-      console.log(`startBtn(e)`);
-      this.RecoderBlobList = [];
-      this.RecoderInfoList = [];
-      this.RecorderSize = 0;
+      console.log(`connectOnBtn(e)`);
+      if (this.RecoderBlobList && this.RecoderBlobList.length > 0) {
+        this.$q.notify({ type: "warning", message: this.$t("InfoRecorderMemory"), position: "center", timeout: 5000 });
+      }
+
+      //this.RecoderBlobList = [];
+      //this.RecoderInfoList = [];
+      //this.RecorderSize = 0;
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video");
       if (myVideoTag && !this.connectOn) {
         await this.startDisplayMedia();
@@ -189,8 +196,8 @@ export default defineComponent({
     },
     //
     // eslint-disable-next-line no-unused-vars
-    stopBtn() {
-      console.log(`stopBtn(e)`);
+    connectOffBtn() {
+      console.log(`connectOffBtn(e)`);
 
       this.MainStream.oninactive = undefined;
       this.stopDisplayMedia();
@@ -806,7 +813,7 @@ export default defineComponent({
         </q-card-section>
         <q-separator />
 
-        <q-card-section v-if="AudioSetting">
+        <q-card-section v-if="AudioSetting && connectOn">
           <div class="row tw-justify-between">
             <h7 class="text-subtitle1">Audio</h7>
             <q-separator />
@@ -818,8 +825,8 @@ export default defineComponent({
           <h7 class="text-body2">{{ $t("EchoCancellation") }}: {{ AudioSetting && AudioSetting.echoCancellation == false ? $t("Off") : $t("On") }}</h7> <br />
           <h7 class="text-body2">{{ $t("SampleRate") }}: {{ AudioSetting ? (AudioSetting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</h7> <br />
         </q-card-section>
-        <q-separator v-if="AudioSetting" />
-        <q-card-section v-if="VideoSetting">
+        <q-separator v-if="AudioSetting && connectOn" />
+        <q-card-section v-if="VideoSetting && connectOn">
           <div class="row tw-justify-between">
             <h7 class="text-subtitle1">Video </h7>
             <q-separator />
@@ -828,12 +835,12 @@ export default defineComponent({
           <h7 class="text-body2">{{ $t("Resolution") }}: {{ VideoSetting ? `${VideoSetting.width}x${VideoSetting.height}` : "0x0" }}</h7> <br />
           <h7 class="text-body2">{{ $t("Frame_rate") }}: {{ VideoSetting ? VideoSetting.frameRate.toFixed(2) : "0" }}</h7> <br />
         </q-card-section>
-        <q-separator v-if="VideoSetting" />
+        <q-separator v-if="VideoSetting && connectOn" />
 
         <q-card-actions v-if="selMode == 'camera' || selMode == 'capture'" class="tw-justify-end">
           <q-btn
             :label="!connectOn ? $t('Connect') : $t('Disconnect')"
-            @click="!connectOn ? startBtn() : stopBtn()"
+            @click="!connectOn ? connectOnBtn() : connectOffBtn()"
             :class="!connectOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
             :icon="!connectOn ? 'link' : 'link_off'"
           />

@@ -31,7 +31,7 @@ export default defineComponent({
             Zugriffen auf den Server, keine Performance Trace oder Werbungen. Der Quellcode des Programms ist öffentlich zugänglich unter GitHub:
             <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a>. <br />
             B) Lokalestore <br />
-            Folgende technischen Daten werden im localstore gespeichert und dienen der Voreinstellung: Audio-Bits per Secunde, video Bits Per Sekunde, mime Type, recorder Slices,
+            Folgende technische Daten werden im localstore gespeichert und dienen der Voreinstellung: Audio-Bits per Secunde, video Bits Per Sekunde, mime Type, recorder Slices,
             recorder Auto Stop Time, Sprache, dark-flag.
           </h7>
           <h7 v-else>
