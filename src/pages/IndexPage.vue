@@ -440,52 +440,66 @@ export default defineComponent({
       if (traks) {
         console.log("AudioSettingBtn()");
         this.AudioCapabilities = traks.getCapabilities();
-        this.AudioSettingNew = this.AudioSetting;
+        this.AudioSettingNew = JSON.parse(JSON.stringify(this.AudioSetting));
         this.AudioSettingDialog = true;
       }
     },
     //
     async AudioSettingChangeBtn() {
-      let [traks] = this.MainStream.getAudioTracks();
-      if (traks) {
+      let [tracks] = this.MainStream.getAudioTracks();
+      if (tracks) {
         console.log("AudioSettingChangeBtn()");
-        await traks.applyConstraints({
-          autoGainControl: this.AudioSettingNew.autoGainControl || false,
-          echoCancellation: this.AudioSettingNew.echoCancellation || false,
-          noiseSuppression: this.AudioSettingNew.noiseSuppression || false,
-          sampleRate: this.AudioSettingNew.sampleRate,
-        });
-        traks.enabled = !this.AudioSettingNew.muted;
+        try {
+          await tracks.applyConstraints(
+            Object.assign(tracks.getSettings(), {
+              autoGainControl: this.AudioSettingNew.autoGainControl,
+              echoCancellation: this.AudioSettingNew.echoCancellation,
+              noiseSuppression: this.AudioSettingNew.noiseSuppression,
+              sampleRate: this.AudioSettingNew.sampleRate,
+            })
+          );
+        } catch (e) {
+          console.error(e);
+          this.$q.notify({ type: "negative", message: `${e.name}: ${e.message}`, position: "center", timeout: 5000 });
+        }
+        tracks.enabled = !this.AudioSettingNew.muted;
 
-        this.AudioSetting = traks.getConstraints();
-        this.AudioSetting.muted = traks.muted || !traks.enabled;
+        this.AudioSetting = tracks.getSettings();
+        this.AudioSetting.muted = tracks.muted || !tracks.enabled;
       }
       this.AudioSettingDialog = false;
     },
     //
     VideoSettingBtn() {
-      let [traks] = this.MainStream.getVideoTracks();
-      if (traks) {
+      let [tracks] = this.MainStream.getVideoTracks();
+      if (tracks) {
         console.log("VideoSettingBtn()");
-        this.VideoCapabilities = traks.getCapabilities();
-        this.VideoSettingNew = this.VideoSetting;
+        this.VideoCapabilities = tracks.getCapabilities();
+        this.VideoSettingNew = JSON.parse(JSON.stringify(this.VideoSetting));
         this.VideoSettingDialog = true;
       }
     },
     //
     async VideoSettingChangeBtn() {
-      let [traks] = this.MainStream.getVideoTracks();
-      if (traks) {
+      let [tracks] = this.MainStream.getVideoTracks();
+      if (tracks) {
         console.log("VideoSettingChangeBtn()");
-        await traks.applyConstraints({
-          height: this.VideoSettingNew.height,
-          width: this.VideoSettingNew.width,
-          frameRate: this.VideoSettingNew.frameRate,
-        });
-        traks.enabled = this.VideoSettingNew.enabled;
+        try {
+          await tracks.applyConstraints(
+            Object.assign(tracks.getSettings(), {
+              height: this.VideoSettingNew.height,
+              width: this.VideoSettingNew.width,
+              frameRate: this.VideoSettingNew.frameRate,
+            })
+          );
+        } catch (e) {
+          console.error(e);
+          this.$q.notify({ type: "negative", message: `${e.name}: ${e.message}`, position: "center", timeout: 5000 });
+        }
+        tracks.enabled = this.VideoSettingNew.enabled;
 
-        this.VideoSetting = traks.getConstraints();
-        this.VideoSetting.enabled = traks.enabled;
+        this.VideoSetting = tracks.getSettings();
+        this.VideoSetting.enabled = tracks.enabled;
       }
       this.VideoSettingDialog = false;
     },

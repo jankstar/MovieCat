@@ -21,6 +21,15 @@ export default defineComponent({
         this.$i18n.locale = i18n_locale;
       }
     }
+    const JSONdark = localStorage.getItem("dark");
+    if (JSONdark) {
+      let dark = JSON.parse(JSONdark);
+      if (dark) {
+        if (this.$q.dark.isActive != dark) {
+          this.$q.dark.toggle();
+        }
+      }
+    }
   },
   computed: {
     isValid() {
@@ -49,6 +58,10 @@ export default defineComponent({
       console.log(`saveLanguData()`);
       localStorage.setItem("i18n_locale", JSON.stringify(this.$i18n.locale));
     },
+    saveDarkData() {
+      console.log(`saveDarkData()`);
+      localStorage.setItem("dark", JSON.stringify(this.$q.dark.isActive));
+    },
   },
 });
 </script>
@@ -65,7 +78,7 @@ export default defineComponent({
         >
 
         <q-icon name="img:icons/icon-256x256.png" size="24px" />
-        <q-toolbar-title> MovieCat 0.2.0</q-toolbar-title>
+        <q-toolbar-title> MovieCat 0.2.1</q-toolbar-title>
         <q-select
           v-model="$i18n.locale"
           :options="localeOptions"
@@ -88,6 +101,7 @@ export default defineComponent({
           @click="
             {
               $q.dark.toggle();
+              saveDarkData();
             }
           "
         >

@@ -32,7 +32,7 @@ export default defineComponent({
             <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a>. <br />
             B) Lokalestore <br />
             Folgende technischen Daten werden im localstore gespeichert und dienen der Voreinstellung: Audio-Bits per Secunde, video Bits Per Sekunde, mime Type, recorder Slices,
-            recorder Auto Stop Time.
+            recorder Auto Stop Time, Sprache, dark-flag.
           </h7>
           <h7 v-else>
             <br />
@@ -42,7 +42,7 @@ export default defineComponent({
             <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a>. <br />
             B) Localstore <br />
             The following technical data are stored in the localstore and serve as default settings: audio bits per second, video bits per second, mime type, recorder slices,
-            recorder auto stop time.
+            recorder auto stop time, language, dark-flag.
           </h7>
         </q-card-section>
         <q-separator />
