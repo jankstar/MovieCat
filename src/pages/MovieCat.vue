@@ -2,13 +2,20 @@
 import { defineComponent } from "vue";
 import { useQuasar } from "quasar";
 //eslint-disable-next-line no-use-before-define
-import { version } from "../../package.json";
+import { version, dependencies } from "../../package.json";
 
 export default defineComponent({
   name: "MovieCat",
   props: ["langu"],
 
   components: {},
+
+  mounted() {
+    this.dependenciesList = [];
+    for (let p in this.dependencies) {
+      this.dependenciesList.push(`${p} : ${this.dependencies[p]}`);
+    }
+  },
 
   data: () => {
     const $q = useQuasar();
@@ -18,6 +25,8 @@ export default defineComponent({
       $t: undefined,
       // eslint-disable-next-line no-undef
       version: version,
+      dependencies: dependencies,
+      dependenciesList: [],
     };
   },
 });
@@ -56,10 +65,13 @@ export default defineComponent({
             Icons: material-icons <br />
             fontFamily: ChakraPetch, Merriweather<br />
             This Font Software is licensed under the SIL Open Font License, Version 1.1. <br />
-            <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a>
-            GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a><br />
-            <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c) 2023 jankstar</a>
-          </h7>
+            <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a><br /> </h7
+          ><br />
+          <h7>Dependencies</h7>
+          <h7 v-for="item in dependenciesList" v-bind:key="item"><br />{{ item }}</h7
+          ><br /><br />
+          GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a><br />
+          <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c) 2023 jankstar</a><br />
         </q-card-section>
         <q-separator />
 

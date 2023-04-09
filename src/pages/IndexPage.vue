@@ -70,8 +70,9 @@ export default defineComponent({
         { value: 0, label: " undefine" },
       ],
       recorderAutoStop: 30, //min
-      RecoderBlobList: [],
-      RecoderInfoList: [],
+      RecorderStartTime: undefined,
+      RecorderBlobList: [],
+      RecorderInfoList: [],
       RecorderSize: 0,
       RecorderState: "inactive",
 
@@ -175,12 +176,12 @@ export default defineComponent({
     async connectOnBtn() {
       let that = this;
       console.log(`connectOnBtn(e)`);
-      if (this.RecoderBlobList && this.RecoderBlobList.length > 0) {
+      if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
         this.$q.notify({ type: "warning", message: this.$t("InfoRecorderMemory"), position: "center", timeout: 5000 });
       }
 
-      //this.RecoderBlobList = [];
-      //this.RecoderInfoList = [];
+      //this.RecorderBlobList = [];
+      //this.RecorderInfoList = [];
       //this.RecorderSize = 0;
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video");
       if (myVideoTag && !this.connectOn) {
@@ -384,16 +385,20 @@ export default defineComponent({
         }
 
         this.Recorder = new MediaRecorder(this.MainStream, this.recorderOptions);
-        this.RecoderBlobList = [];
-        this.RecoderInfoList = [];
-        this.RecorderSize = 0;
+        if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
+          this.$q.notify({ type: "warning", message: this.$t("InfoRecorderMemory"), position: "center", timeout: 5000 });
+        }
+        // this.RecorderBlobList = [];
+        // this.RecorderInfoList = [];
+        // this.RecorderSize = 0;
+        // this.RecorderStartTime = undefined;
         let that = this;
 
         this.Recorder.ondataavailable = (e) => {
           console.log(`type: ${e.type} time: ${e.timecode} size: ${e.data.size}`);
           if (e.data && e.data.size > 0) {
-            that.RecoderBlobList.push(e.data);
-            that.RecoderInfoList.push({ type: e.type, time: Date.now(), size: e.data.size });
+            that.RecorderBlobList.push(e.data);
+            that.RecorderInfoList.push({ type: e.type, time: Date.now(), size: e.data.size });
             that.RecorderSize += e.data.size;
           }
         };
@@ -524,6 +529,10 @@ export default defineComponent({
           this.Recorder.start(); //ohne slices
         }
 
+        if (!this.RecorderStartTime) {
+          this.RecorderStartTime = Date.now();
+        }
+
         this.TimeOutID = setTimeout(function () {
           that.stopRecorder();
           that.download();
@@ -551,9 +560,9 @@ export default defineComponent({
     },
     //
     download() {
-      console.log(`download: ${this.RecoderBlobList.length} blobs`);
-      if (this.RecoderBlobList && this.RecoderBlobList.length > 0) {
-        var blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
+      console.log(`download: ${this.RecorderBlobList.length} blobs`);
+      if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
+        var blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
         var url = window.URL.createObjectURL(blob);
         var a = document.createElement("a");
         a.style.display = "none";
@@ -574,8 +583,8 @@ export default defineComponent({
     },
     //
     clearBuffer() {
-      this.RecoderBlobList = [];
-      this.RecoderInfoList = [];
+      this.RecorderBlobList = [];
+      this.RecorderInfoList = [];
       this.RecorderSize = 0;
     },
     //
@@ -689,11 +698,11 @@ export default defineComponent({
       console.log(`playOnBtn()`);
       let that = this;
       this.durationPlayer = 0;
-      if (this.RecoderInfoList.length > 0) {
-        this.durationPlayer = ((this.RecoderInfoList[this.RecoderInfoList.length - 1].time - this.RecoderInfoList[0].time) / 1000).toFixed(0);
+      if (this.RecorderInfoList.length > 0) {
+        this.durationPlayer = ((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000).toFixed(0);
       }
       let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (this.playOn == false && myVideoTag && this.RecoderBlobList && this.RecoderBlobList.length > 0 && this.recorderOptions.mimeType) {
+      if (this.playOn == false && myVideoTag && this.RecorderBlobList && this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType) {
         myVideoTag.pause(); //player stoppen
         //
         myVideoTag.onloadedmetadata = () => {
@@ -720,8 +729,8 @@ export default defineComponent({
           that.playOn = true;
         };
         //
-        //        var url = window.URL.createObjectURL(this.RecoderBlobList[this.PlayerPosition]);
-        let blob = new Blob(this.RecoderBlobList, { type: this.recorderOptions.mimeType });
+        //        var url = window.URL.createObjectURL(this.RecorderBlobList[this.PlayerPosition]);
+        let blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
         let url = window.URL.createObjectURL(blob);
         myVideoTag.src = url;
         myVideoTag.currentTime = this.PlayerPosition;
@@ -872,7 +881,7 @@ export default defineComponent({
           <video id="id_video_player" playsinline muted style="background-color: black"></video>
         </q-card-section>
         <q-card-section>
-          <h7 v-if="RecoderInfoList" class="text-body2">{{ $t("Time") }}: {{ computeTime(PlayerPosition) }}</h7>
+          <h7 v-if="RecorderInfoList" class="text-body2">{{ $t("Time") }}: {{ computeTime(PlayerPosition) }}</h7>
           <br />
           <q-slider v-model="PlayerPosition" :min="0" :max="durationPlayer" label style="width: 90%" />
           <br />
@@ -896,7 +905,7 @@ export default defineComponent({
             @click="!playOn ? playOnBtn() : playOffBtn()"
             :icon="!playOn ? 'play_circle' : 'stop_circle'"
             :class="!playOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
-            :disable="!RecoderBlobList || RecoderBlobList.length == 0"
+            :disable="!RecorderBlobList || RecorderBlobList.length == 0"
           />
         </q-card-actions>
       </q-card>
@@ -909,8 +918,13 @@ export default defineComponent({
           <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte</h7><br />
           <h7 class="text-body2"
             >{{ $t("Time") }}:
-            {{ RecoderInfoList && RecoderInfoList.length > 0 ? computeTime((RecoderInfoList[RecoderInfoList.length - 1].time - RecoderInfoList[0].time) / 1000) : "00:00:00" }}
+            {{
+              RecorderStartTime && RecorderInfoList && RecorderInfoList.length > 0
+                ? computeTime((RecorderInfoList[RecorderInfoList.length - 1].time - RecorderStartTime) / 1000)
+                : "00:00:00"
+            }}
           </h7>
+          <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
 
           <q-select
             v-model="recorderOptions.mimeType"
