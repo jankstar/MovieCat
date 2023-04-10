@@ -34,6 +34,8 @@ export default defineComponent({
 
       //Recorder
       Recorder: <MediaRecorder>undefined,
+      RecorderCounter: 0,
+      RecorderCounterJob: undefined,
       recorderOptions: {
         audioBitsPerSecond: 64000,
         videoBitsPerSecond: 2500000,
@@ -402,6 +404,7 @@ export default defineComponent({
             that.RecorderBlobList.push(e.data);
             that.RecorderInfoList.push({ type: e.type, time: Date.now(), size: e.data.size });
             that.RecorderSize += e.data.size;
+            that.RecorderCounter = 0;
           }
         };
 
@@ -409,6 +412,9 @@ export default defineComponent({
         this.Recorder.onstop = () => {
           console.log("onstop()");
           that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+          if (that.RecorderCounterJob) {
+            that.stopTimer();
+          }
         };
 
         this.Recorder.onerror = (e) => {
@@ -430,9 +436,33 @@ export default defineComponent({
           console.log("onstart()");
 
           that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
+          if (that.recorderSlices != 1) {
+            //only if no 1 sec slices
+            that.startTimer();
+          }
         };
       } catch (err) {
         console.error(`${err.name}: ${err.message}`);
+      }
+    },
+
+    //
+    stopTimer() {
+      console.log(`stopTimer()`);
+      if (this.RecorderCounterJob) {
+        clearTimeout(this.RecorderCounterJob);
+        this.RecorderCounter = 0;
+      }
+    },
+
+    startTimer() {
+      console.log(`startTimer()`);
+      let that = this;
+      if (this.RecorderState != "inactive") {
+        this.RecorderCounterJob = setTimeout(() => {
+          that.RecorderCounter += 1;
+          that.startTimer();
+        }, 1000);
       }
     },
 
@@ -861,7 +891,7 @@ export default defineComponent({
       <!-- input audio / Video-->
       <q-card v-if="selMode == 'capture' || selMode == 'camera'" style="max-width: 300px">
         <q-card-section>
-          <h7 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }})</h7>
+          <h7 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }}) </h7>
 
           <div class="peer" id="peer-audio">
             <div class="stat-value">
@@ -917,16 +947,17 @@ export default defineComponent({
         <q-card-section>
           <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
 
-          <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte</h7><br />
+          <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte </h7>
+          <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
+          <br />
           <h7 class="text-body2"
             >{{ $t("Time") }}:
             {{
               RecorderStartTime && RecorderInfoList && RecorderInfoList.length > 0
-                ? computeTime((RecorderInfoList[RecorderInfoList.length - 1].time - RecorderStartTime) / 1000)
-                : "00:00:00"
+                ? computeTime((RecorderInfoList[RecorderInfoList.length - 1].time - RecorderStartTime) / 1000 + RecorderCounter)
+                : computeTime(RecorderCounter)
             }}
           </h7>
-          <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
 
           <q-select
             v-model="recorderOptions.mimeType"
