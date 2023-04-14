@@ -54,9 +54,10 @@ export default defineComponent({
           </h7>
           <h7>
             <br />
-            Quasar: {{ $q.version }} <br />
-            Vite: 2.9.15 <br />
-            tailwindcss: 3.2.4 <br />
+            <a href="https://quasar.dev">Quasar: {{ $q.version }} </a><br />
+            <a href="https://https://vitejs.dev">Vite: 2.9.15</a><br />
+            <a href="https://tailwindcss.com">tailwindcss: 3.2.4</a> <br />
+            <a href="https://github.com/webrtcHacks/adapter">adapter.js: 8.0.0</a><br />
             Platform: {{ $q.platform.is.platform }} <br />
             Browser target: es2019, edge88, firefox78, chrome87, safari13.1<br />
           </h7>
@@ -67,6 +68,7 @@ export default defineComponent({
             This Font Software is licensed under the SIL Open Font License, Version 1.1. <br />
             <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a><br /> </h7
           ><br />
+
           <h7>Dependencies</h7>
           <h7 v-for="item in dependenciesList" v-bind:key="item"><br />{{ item }}</h7
           ><br /><br />
