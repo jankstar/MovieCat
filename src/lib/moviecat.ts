@@ -34,6 +34,20 @@ const ConstPlaybackRateOptions = [
   { value: 4, label: "4" },
 ]
 
+const ConstTrueMimeType = [
+  { value: "video/webm", label: "WebM" },
+  { value: "video/webm;codecs=vp8", label: "WebM Google VP8" },
+  { value: "video/webm;codecs=vp9", label: "WebM Google VP9" },
+  { value: "video/webm;codecs=daala", label: "WebM Daala" },
+  { value: "video/webm;codecs=h264", label: "WebM H.264" },
+  { value: "video/webm;codecs=av1", label: "WebM AV1" },
+  { value: "video/mp4", label: "mp4" },
+  { value: "video/mp4;codecs=vp8", label: "mp4 Google VP8" },
+  { value: "video/mp4;codecs=vp9", label: "mp4 Google VP9" },
+  { value: "video/mp4;codecs=h264", label: "mp4 H.264" },
+  { value: "video/mpeg", label: "mpeg" },
+];
+
 export default {
 
   ConstAudioBPSOptions,
@@ -43,4 +57,6 @@ export default {
   ConstRecorderSlicesOptions,
 
   ConstPlaybackRateOptions,
+
+  ConstTrueMimeType,
 }

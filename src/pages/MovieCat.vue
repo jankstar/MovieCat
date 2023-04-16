@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useQuasar } from "quasar";
-//eslint-disable-next-line no-use-before-define
+// @ts-ignore
 import { version, dependencies } from "../../package.json";
 
 export default defineComponent({

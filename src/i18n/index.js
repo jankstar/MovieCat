@@ -38,12 +38,19 @@ export default {
     "Filename": "Filename",
     "Size": "Size:",
     "Time": "Time",
+    "Required": "* Required",
 
     "InfoMovieCat": "Info about MovieCat",
     "InfoToggle": "Toggle dark and light mode.",
     "InfoPrivacyPolicy": "Info about Privacy Policy",
     "InfoRecorderMemory": "Recorder memory still contains data.",
     "InfoRefreshPerSlices": "refresh per slices",
+    "InfoNoMediaStream": "no media stream",
+    "InfoAudioOffVideoOff": "audio and video off - no media stream",
+    "InfoMin1": "The minimum is 1 min",
+    "InfoMax180": "The maximum is 180 min",
+
+    "QMemory": "There is data in memory - delete?",
   },
   //
   'de-DE': {
@@ -68,7 +75,7 @@ export default {
     "Video_BPS": "Video Bits/s",
     "Recorder_mimetype": "Mime Type",
     "Slice_length": "Block Länge",
-    "Auto_stop": "auto Stop [min]",
+    "Auto_stop": "auto Stopp [min]",
     "Connect": "Verbinden",
     "Disconnect": "Trennen",
     "Frame_rate": "Frame Rate",
@@ -85,11 +92,18 @@ export default {
     "Filename": "Dateiname",
     "Size": "Größe:",
     "Time": "Zeit",
+    "Required": "* Mussfeld",
+    "InfoMin1": "Das Minimum ist 1 min",
+    "InfoMax180": "Das Maximum sind 180 min",
 
     "InfoMovieCat": "Info über MovieCat",
     "InfoToggle": "Umschalten zwischen Hell und Dunkel.",
     "InfoPrivacyPolicy": "Info über Datenschutz",
     "InfoRecorderMemory": "Recorder memory enthält noch Daten.",
     "InfoRefreshPerSlices": "refresh per Block",
+    "InfoNoMediaStream": "kein Media-Stream",
+    "InfoAudioOffVideoOff": "Audio und Video aus - kein Media-Stream",
+
+    "QMemory": "Es gibt Daten im Speicher - löschen?",
   }
 }

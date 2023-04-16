@@ -62,6 +62,12 @@ export default defineComponent({
       RecorderSize: 0,
       RecorderState: "inactive",
 
+      FileApi: false,
+      RecorderDir: "",
+      RecorderFileHandler: undefined,
+      RecorderFileEntries: [],
+      RecorderPickerID: 0,
+
       PlayerPosition: 0, //Attention only integer in sec !
       durationPlayer: 0, //Attention only integer in sec !
       PlayerMuted: true,
@@ -78,6 +84,11 @@ export default defineComponent({
     console.log(`IndexPage created`);
     this.SupportedConstraints = navigator.mediaDevices.getSupportedConstraints();
     console.log(`SupportedConstraints: ${JSON.stringify(this.SupportedConstraints)}`);
+    // @ts-ignore
+    if (window.showDirectoryPicker) {
+      console.log(`file api is true`);
+      this.FileApi = true;
+    }
   },
 
   async mounted() {
@@ -187,21 +198,8 @@ export default defineComponent({
     },
 
     getMimeType() {
-      let trueMimeType = [
-        { value: "video/webm", label: "WebM" },
-        { value: "video/webm;codecs=vp8", label: "WebM Google VP8" },
-        { value: "video/webm;codecs=vp9", label: "WebM Google VP9" },
-        { value: "video/webm;codecs=daala", label: "WebM Daala" },
-        { value: "video/webm;codecs=h264", label: "WebM H.264" },
-        { value: "video/webm;codecs=av1", label: "WebM AV1" },
-        { value: "video/mp4", label: "mp4" },
-        { value: "video/mp4;codecs=vp8", label: "mp4 Google VP8" },
-        { value: "video/mp4;codecs=vp9", label: "mp4 Google VP9" },
-        { value: "video/mp4;codecs=h264", label: "mp4 H.264" },
-        { value: "video/mpeg", label: "mpeg" },
-      ];
       let that = this;
-      trueMimeType.forEach((item: any) => {
+      moviecat.ConstTrueMimeType.forEach((item: any) => {
         if (MediaRecorder.isTypeSupported(item.value)) {
           console.log(`codec ${item.value} supported`);
 
@@ -326,7 +324,7 @@ export default defineComponent({
             };
           }
           if (configuration.video == false && configuration.audio == false) {
-            throw new Error("audio and video off - no media stream");
+            throw new Error(this.$t("InfoAudiOffVideoOff"));
           }
           this.MainStream = await navigator.mediaDevices.getUserMedia(configuration);
         } else {
@@ -335,6 +333,7 @@ export default defineComponent({
         }
 
         this.newMediaRecorder();
+
         let lTracks = this.MainStream.getVideoTracks();
         if (lTracks && lTracks.length > 0 && lTracks[0]) {
           this.VideoSetting = lTracks[0].getSettings();
@@ -377,13 +376,19 @@ export default defineComponent({
     newMediaRecorder() {
       try {
         if (!this.MainStream) {
-          throw new Error("no media stream");
+          throw new Error(this.$t("InfoNoMediaStream"));
         }
 
-        this.Recorder = new MediaRecorder(this.MainStream, this.recorderOptions);
         if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
           this.$q.notify({ type: "warning", message: this.$t("InfoRecorderMemory"), position: "center", timeout: 5000 });
+          if (this.confirmDialog(this.$t("QMemory"))) {
+            this.RecorderBlobList = [];
+            this.RecorderInfoList = [];
+            this.RecorderSize = 0;
+            this.RecorderStartTime = Date.now();
+          }
         }
+        this.Recorder = new MediaRecorder(this.MainStream, this.recorderOptions);
 
         let that = this;
 
@@ -489,7 +494,7 @@ export default defineComponent({
           that.stopRecorder();
           that.download();
           that.TimeOutID = undefined;
-        }, 1000 * 60 * this.recorderAutoStop); //150 min = 2,5h
+        }, 1000 * 60 * this.recorderAutoStop); //180 min = 3h
       }
     },
     //
@@ -533,11 +538,106 @@ export default defineComponent({
     upload() {
       console.log(`upload()`);
     },
+
+    async openDirBtn() {
+      console.log(`openDirBtn()`);
+      let that = this;
+      try {
+        // @ts-ignore
+        if (!window.showDirectoryPicker) {
+          throw Error("file api not supported");
+        }
+        if (!this.RecorderPickerID) {
+          this.RecorderPickerID = (Math.random() * 100).toFixed(0);
+        }
+        if (!this.RecorderFileHandler) {
+          // @ts-ignore
+          this.RecorderFileHandler = await window.showDirectoryPicker({
+            id: this.RecorderPickerID,
+            mode: "readwrite",
+            startIn: "downloads",
+          });
+        } else {
+          // @ts-ignore
+          this.RecorderFileHandler = await window.showDirectoryPicker({
+            id: this.RecorderPickerID,
+            mode: "readwrite",
+          });
+        }
+        if (this.RecorderFileHandler) {
+          console.log(`openDirBtn() ${this.RecorderFileHandler.name}`);
+          this.RecorderPickerID = 0;
+        }
+        this.RecorderFileEntries = [];
+        let lExtension = `.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+        for await (const [key, value] of this.RecorderFileHandler.entries()) {
+          if (value.kind == "file" && value.name.endsWith(lExtension)) {
+            that.RecorderFileEntries.push({ key, value });
+            console.log(`file: ${value.name}`);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        this.$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
+      }
+    },
+    //
+    async loadFileBtn(iKey: string) {
+      console.log(`loadFileBtn()`, iKey);
+      try {
+        let lFileHandler = await this.RecorderFileHandler.getFileHandle(iKey);
+        const file = await lFileHandler.getFile();
+        let lSize = file.size;
+        this.RecorderBlobList = [];
+        this.RecorderInfoList = [];
+        this.RecorderSize = 0;
+        this.RecorderCounter = 0;
+        this.RecorderStartTime = Date.now();
+        let lRecorderTime = this.RecorderStartTime;
+        let lStart = 0;
+
+        while (lSize > 0) {
+          let content = undefined;
+          let lContenSize = 0;
+          let lSizeLoad = lSize;
+          if (lSizeLoad > 2000000 * 1024) {
+            //max memory 2 gByte
+            lSizeLoad = 2000000 * 1024;
+            lSize -= 2000000 * 1024;
+            content = await file.slice(lStart, lStart + lSizeLoad); //await file.arrayBuffer();
+            lStart += lSizeLoad;
+          } else if (lStart != 0) {
+            lSize = 0;
+            content = await file.slice(lStart); //await file.arrayBuffer();
+          } else {
+            lSize = 0;
+            content = await file.arrayBuffer();
+          }
+          this.RecorderBlobList.push(content);
+          if (content.byteLength) {
+            lContenSize = content.byteLength;
+          } else {
+            lContenSize = content.size;
+          }
+          console.log(`time: ${lRecorderTime} + ${Math.trunc(lContenSize / (0.25 * 1024))}`); //2,5 mByte /msec
+          lRecorderTime += Math.trunc(lContenSize / (0.25 * 1024));
+          this.RecorderInfoList.push({ type: "blob", time: lRecorderTime, size: lContenSize });
+          this.RecorderSize += lContenSize;
+        }
+        this.Filename = iKey.substring(0, iKey.indexOf(`.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`));
+        this.selMode = "player";
+      } catch (err) {
+        console.error(err);
+        this.$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
+      }
+    },
     //
     clearBuffer() {
       this.RecorderBlobList = [];
       this.RecorderInfoList = [];
       this.RecorderSize = 0;
+      this.RecorderCounter = 0;
+      this.RecorderStartTime = undefined;
     },
     //
     uuidv4(): string {
@@ -721,7 +821,8 @@ export default defineComponent({
         myVideoTag.playbackRate = value;
       }
     },
-    computeTime(iDuration: number) {
+    //
+    computeTime(iDuration: number): string {
       let l_time = Math.trunc(iDuration);
       let l_sec = (l_time % 60).toFixed(0);
       l_sec = l_sec.length > 1 ? l_sec : `0${l_sec}`;
@@ -731,6 +832,31 @@ export default defineComponent({
       let l_std = (l_time / 60).toFixed(0);
       l_std = l_std.length > 1 ? l_std : `0${l_std}`;
       return `${l_std}:${l_min}:${l_sec}`;
+    },
+    //
+    async confirmDialog(iMessage: string) {
+      let eAnswer: boolean = false;
+      await this.$q
+        .dialog({
+          title: "Confirm",
+          message: iMessage,
+          cancel: true,
+          persistent: true,
+        })
+        .onOk(() => {
+          // console.log('>>>> OK')
+          eAnswer = true;
+        })
+        .onOk(() => {
+          // console.log('>>>> second OK catcher')
+        })
+        .onCancel(() => {
+          // console.log('>>>> Cancel')
+        })
+        .onDismiss(() => {
+          // console.log('I am triggered on both OK and Cancel')
+        });
+      return eAnswer;
     },
   },
 });
@@ -926,7 +1052,7 @@ export default defineComponent({
                 fill-mask="#"
                 reverse-fill-mask
                 style="width: 50%"
-                :rules="[(val) => !!val || '* Required', (val) => val > 0 || 'The minimum is 1 min', (val) => val < 151 || 'The maximum is 150 min']"
+                :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 181 || this.$t('InfoMax180')]"
                 @update:model-value="saveRecorderData"
               />
             </div>
@@ -935,13 +1061,27 @@ export default defineComponent({
         </q-card-section>
         <q-separator />
 
+        <q-card-section v-if="FileApi">
+          <div class="row tw-justify-between">
+            <h7 class="text-subtitle1"> Files {{ `${RecorderFileHandler && RecorderFileHandler.name ? RecorderFileHandler.name : "?"}: ${RecorderFileEntries.length || 0}` }}</h7>
+            <q-btn label="DIR" icon="folder" @click="openDirBtn" />
+          </div>
+          <br />
+
+          <div v-for="file in RecorderFileEntries" class="row tw-justify-between" v-bind:key="file">
+            <h6>{{ file.key }}</h6>
+            <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${file.key}`)" :disable="RecorderState != 'inactive' || connectOn" />
+          </div>
+        </q-card-section>
+        <q-separator v-if="FileApi" />
+
         <q-card-actions class="tw-justify-end tw-gap-2">
           <q-btn
             v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')"
             label="Rec on"
             icon="videocam"
             @click="startRecorderBtn"
-            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 150"
+            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 180"
             class="tw-bg-lime-300"
           />
           <q-btn
@@ -952,11 +1092,8 @@ export default defineComponent({
             :disable="RecorderState == 'inactive' || !connectOn"
             class="tw-bg-red-300"
           />
-          <!--div v-if="RecorderSize != 0 && RecorderState == 'inactive'"-->
           <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="download" />
-          <!--q-btn v-if="selMode == 'player'" label="upload" @click="upload" icon="upload" /-->
           <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="delete_forever" />
-          <!--/div-->
         </q-card-actions>
       </q-card>
     </div>
