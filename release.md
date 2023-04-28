@@ -1,3 +1,9 @@
+# MovieCat 0.2.3
+
+- file api for loading and saving
+- security question before clearing the file buffer
+- spinner while loading/saving
+
 # MovieCat 0.2.2
 
 - components for video and audio
