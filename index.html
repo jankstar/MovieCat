@@ -45,6 +45,7 @@
   </head>
   <body>
     <script src="/adapter/adapter.js"></script>
+    <script src="wasm_exec.js"></script>
 
     <!-- quasar:entry-point -->
     <script>
@@ -52,6 +53,31 @@
         name: "<%= productName %>",
         description: "<%= productDescription %>",
       };
+
+      wasm_filename = "webm_funny.wasm";
+
+      function load_wasm() {
+        if (!WebAssembly.instantiateStreaming) {
+          // polyfill
+          WebAssembly.instantiateStreaming = async (resp, importObject) => {
+            const source = await (await resp).arrayBuffer();
+            return await WebAssembly.instantiate(source, importObject);
+          };
+        }
+
+        const go = new Go();
+
+        WebAssembly.instantiateStreaming(fetch(wasm_filename), go.importObject)
+          .then((results) => {
+            go.run(results.instance);
+          })
+          .catch((err) => {
+            console.error("Error Loading WebAssembly -", err);
+            //      location.reload(true);
+          });
+      }
+
+      //load_wasm();
     </script>
     <style>
       @font-face {

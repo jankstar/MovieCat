@@ -519,6 +519,7 @@ export default defineComponent({
     //
     async download() {
       console.log(`download: ${this.RecorderBlobList.length} blobs`);
+      this.SpinnerOn = true;
       if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
         if (this.RecorderFileHandler && this.RecorderFileHandler.name) {
           //
@@ -552,6 +553,7 @@ export default defineComponent({
           }, 3000);
         }
       }
+      this.SpinnerOn = false;
     },
     //
     async openDirBtn() {
@@ -889,7 +891,7 @@ export default defineComponent({
           <br />
         </q-card-section>
         <q-separator v-if="selMode == 'capture' || selMode == 'camera'" />
-        <q-card-section>
+        <q-card-section v-if="selMode != 'player'">
           <div v-if="selMode == 'capture' || selMode == 'camera'">
             <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</h7> <br />
           </div>
@@ -904,7 +906,7 @@ export default defineComponent({
             :disable="connectOn"
           />
         </q-card-section>
-        <q-separator />
+        <q-separator v-if="selMode != 'player'" />
 
         <AudioConstraints v-if="selMode != 'player' && !connectOn" v-model="AudioConstraints" :langu="langu" :SupportedConstraints="SupportedConstraints" />
 
