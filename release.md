@@ -1,10 +1,14 @@
 # MovieCat 0.2.3
 
+- file manager for chrome
+
+# MovieCat 0.2.3
+
 - file api for loading and saving
 - security question before clearing the file buffer
 - spinner while loading/saving
 - decode webm/ebml
-- clculate duration for webm data
+- calculate duration for webm data
 
 # MovieCat 0.2.2
 

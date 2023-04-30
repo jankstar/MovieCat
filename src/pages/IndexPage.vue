@@ -1148,26 +1148,6 @@ export default defineComponent({
         </q-card-section>
         <q-separator />
 
-        <q-card-section v-if="FileApi">
-          <div class="row tw-justify-between">
-            <h7 class="text-subtitle1"> Files {{ `*/${RecorderFileHandler && RecorderFileHandler.name ? RecorderFileHandler.name : "?"}: ${RecorderFileEntries.length || 0}` }}</h7>
-            <q-btn label="DIR" icon="folder" @click="openDirBtn" />
-          </div>
-          <br />
-
-          <q-virtual-scroll style="max-height: 300px" :items="RecorderFileEntries" separator v-slot="{ item, index }">
-            <q-item :key="index" dense>
-              <q-item-section>
-                <q-item-label>
-                  <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${item.key}`)" :disable="RecorderState != 'inactive' || connectOn" />
-                  {{ item.key }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-virtual-scroll>
-        </q-card-section>
-        <q-separator v-if="FileApi" />
-
         <q-card-actions class="tw-justify-end tw-gap-2">
           <q-btn
             v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')"
@@ -1188,6 +1168,27 @@ export default defineComponent({
           <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="download" />
           <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="delete_forever" />
         </q-card-actions>
+      </q-card>
+      <q-card v-if="FileApi" style="width: 600px">
+        <q-card-section v-if="FileApi">
+          <div class="row tw-justify-between">
+            <h7 class="text-subtitle1"> Files {{ `*/${RecorderFileHandler && RecorderFileHandler.name ? RecorderFileHandler.name : "?"}: ${RecorderFileEntries.length || 0}` }}</h7>
+            <q-btn label="DIR" icon="folder" @click="openDirBtn" />
+          </div>
+          <br />
+
+          <q-virtual-scroll style="max-height: 300px" :items="RecorderFileEntries" separator v-slot="{ item, index }">
+            <q-item :key="index" dense>
+              <q-item-section>
+                <q-item-label>
+                  <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${item.key}`)" :disable="RecorderState != 'inactive' || connectOn" />
+                  {{ item.key }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-virtual-scroll>
+        </q-card-section>
+        <q-separator v-if="FileApi" />
       </q-card>
       <q-dialog v-model="SpinnerOn" no-backdrop-dismiss persistent class="tw-font-sans">
         <div v-if="SpinnerOn" class="q-gutter-md justify-center"><q-spinner-hourglass color="light-green" size="xl" /></div>
