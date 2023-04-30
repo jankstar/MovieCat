@@ -654,17 +654,23 @@ export default defineComponent({
             const decoder = new ebml.Decoder();
             const reader = new ebml.Reader();
             const blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
-            blob.arrayBuffer().then((abuffer) => {
-              const ebmlElms = <any>decoder.decode(abuffer);
-              ebmlElms.forEach((elm) => {
-                reader.read(elm);
+            new Response(blob)
+              //            blob
+              .arrayBuffer()
+              .then((abuffer) => {
+                const ebmlElms = <any>decoder.decode(abuffer);
+                ebmlElms.forEach((elm) => {
+                  reader.read(elm);
+                });
+                reader.stop();
+                const sec = (reader.duration * reader.timecodeScale) / 1000 / 1000; // / 1000;
+                console.log(`duration ${that.computeTime(sec)}`);
+                that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
+                that.durationPlayer = sec;
+              })
+              .catch((e) => {
+                console.error("blob larger than 2 GB: ", e);
               });
-              reader.stop();
-              const sec = (reader.duration * reader.timecodeScale) / 1000 / 1000; // / 1000;
-              console.log(`duration ${that.computeTime(sec)}`);
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
-              that.durationPlayer = sec;
-            });
           } catch (e) {
             console.error(e);
           }
