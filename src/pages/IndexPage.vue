@@ -74,6 +74,7 @@ export default defineComponent({
       PlayerPosition: 0, //Attention only integer in sec !
       durationPlayer: 0, //Attention only integer in sec !
       PlayerMuted: true,
+      calculateDuration: false,
       playOn: false,
       playbackRate: 1,
       playbackRateOptions: moviecat.ConstPlaybackRateOptions,
@@ -665,6 +666,7 @@ export default defineComponent({
         if (this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType.includes("webm")) {
           //if webm then decode
           try {
+            this.calculateDuration = true;
             let that = this;
             const decoder = new ebml.Decoder();
             const reader = new ebml.Reader();
@@ -687,12 +689,15 @@ export default defineComponent({
                 console.log(`duration ${that.computeTime(sec)}`);
                 that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
                 that.durationPlayer = sec;
+                that.calculateDuration = false;
               })
               .catch((e) => {
                 console.error("blob larger than 2 GB: ", e);
+                this.calculateDuration = false;
               });
           } catch (e) {
             console.error(e);
+            this.calculateDuration = false;
           }
         }
 
@@ -1070,14 +1075,18 @@ export default defineComponent({
           <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte </h7>
           <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
           <br />
-          <h7 class="text-body2"
-            >{{ $t("Time") }}:
-            {{
-              RecorderStartTime && RecorderInfoList && RecorderInfoList.length > 0
-                ? computeTime((RecorderInfoList[RecorderInfoList.length - 1].time - RecorderStartTime) / 1000 + RecorderCounter)
-                : computeTime(RecorderCounter)
-            }}
-          </h7>
+          <div class="row">
+            <h7 class="text-body2"
+              >{{ $t("Time") }}:
+              {{
+                RecorderStartTime && RecorderInfoList && RecorderInfoList.length > 0
+                  ? computeTime((RecorderInfoList[RecorderInfoList.length - 1].time - RecorderStartTime) / 1000 + RecorderCounter)
+                  : computeTime(RecorderCounter)
+              }}
+            </h7>
+            <q-spinner-hourglass v-if="calculateDuration" color="primary" size="1em" />
+            <h7 v-if="calculateDuration" style="font-size: 10px">calculate duration</h7>
+          </div>
 
           <q-select
             v-model="recorderOptions.mimeType"

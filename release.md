@@ -4,6 +4,7 @@
 - security question before clearing the file buffer
 - spinner while loading/saving
 - decode webm/ebml
+- clculate duration for webm data
 
 # MovieCat 0.2.2
 
