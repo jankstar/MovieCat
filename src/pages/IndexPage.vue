@@ -600,6 +600,20 @@ export default defineComponent({
       }
     },
     //
+    readAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(blob);
+        reader.onloadend = () => {
+          resolve(<ArrayBuffer>reader.result);
+        };
+        reader.onerror = (ev) => {
+          reject(ev);
+        };
+      });
+    },
+
+    //
     async loadFileBtn(iKey: string) {
       //file is loading in slices
       console.log(`loadFileBtn()`, iKey);
@@ -633,6 +647,7 @@ export default defineComponent({
             lSize = 0;
             content = await file.arrayBuffer();
           }
+
           this.RecorderBlobList.push(content);
           if (content.byteLength) {
             lContenSize = content.byteLength;
@@ -653,9 +668,14 @@ export default defineComponent({
             let that = this;
             const decoder = new ebml.Decoder();
             const reader = new ebml.Reader();
-            const blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
-            new Response(blob)
-              //            blob
+            //decode only the first blob due to memory limitation
+            let blob = <Blob>{};
+            if (this.RecorderBlobList.length == 1) {
+              blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
+            } else {
+              blob = this.RecorderBlobList[0];
+            }
+            blob
               .arrayBuffer()
               .then((abuffer) => {
                 const ebmlElms = <any>decoder.decode(abuffer);
@@ -804,6 +824,7 @@ export default defineComponent({
       //this.durationPlayer = 0;
       if (this.RecorderInfoList.length > 1) {
         this.durationPlayer = Math.trunc((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000);
+        this.RecorderStartTime = this.RecorderInfoList[0].time;
       }
       this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
       if (this.playOn == false && this.VideoElement && this.RecorderBlobList && this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType) {
@@ -814,6 +835,9 @@ export default defineComponent({
           let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.durationPlayer;
           if (that.durationPlayer < sec) {
             that.durationPlayer = sec;
+            if (that.RecorderInfoList.length > 1) {
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderInfoList[0].time + Math.trunc(that.VideoElement.duration * 1000);
+            }
           }
           console.log("Duration change", that.durationPlayer);
         };
@@ -822,6 +846,9 @@ export default defineComponent({
           let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.durationPlayer;
           if (that.durationPlayer < sec) {
             that.durationPlayer = sec;
+            if (that.RecorderInfoList.length > 1) {
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderInfoList[0].time + Math.trunc(that.VideoElement.duration * 1000);
+            }
           }
           console.log("Duration change", that.durationPlayer);
         };
@@ -830,6 +857,9 @@ export default defineComponent({
           that.PlayerPosition = that.VideoElement.currentTime ? Math.trunc(that.VideoElement.currentTime) : 0;
           if (that.durationPlayer < that.PlayerPosition) {
             that.durationPlayer = that.PlayerPosition + 1;
+            if (that.RecorderInfoList.length > 1) {
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderInfoList[0].time + Math.trunc(that.VideoElement.duration * 1000);
+            }
           }
         };
         this.VideoElement.onended = () => {
