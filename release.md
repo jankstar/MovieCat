@@ -3,6 +3,7 @@
 - file api for loading and saving
 - security question before clearing the file buffer
 - spinner while loading/saving
+- decode webm/ebml
 
 # MovieCat 0.2.2
 

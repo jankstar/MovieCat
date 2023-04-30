@@ -4,6 +4,7 @@ import AudioConstraints from "components/AudioConstraints.vue";
 import AudioSettingComp from "components/AudioSettingComp.vue";
 import VideoSettingComp from "components/VideoSettingComp.vue";
 import moviecat from "src/lib/moviecat.js";
+import * as ebml from "ts-ebml";
 
 export default defineComponent({
   name: "IndexPage",
@@ -600,6 +601,7 @@ export default defineComponent({
     },
     //
     async loadFileBtn(iKey: string) {
+      //file is loading in slices
       console.log(`loadFileBtn()`, iKey);
       this.SpinnerOn = true;
       try {
@@ -643,6 +645,31 @@ export default defineComponent({
           this.RecorderSize += lContenSize;
         }
         this.fileName = iKey.substring(0, iKey.indexOf(`.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`));
+        this.PlayerPosition = 0;
+
+        if (this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType.includes("webm")) {
+          //if webm then decode
+          try {
+            let that = this;
+            const decoder = new ebml.Decoder();
+            const reader = new ebml.Reader();
+            const blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
+            blob.arrayBuffer().then((abuffer) => {
+              const ebmlElms = <any>decoder.decode(abuffer);
+              ebmlElms.forEach((elm) => {
+                reader.read(elm);
+              });
+              reader.stop();
+              const sec = (reader.duration * reader.timecodeScale) / 1000 / 1000; // / 1000;
+              console.log(`duration ${that.computeTime(sec)}`);
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
+              that.durationPlayer = sec;
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
         this.selMode = "player";
       } catch (err) {
         console.error(err);
@@ -768,9 +795,9 @@ export default defineComponent({
     playOnBtn() {
       console.log(`playOnBtn()`);
       let that = this;
-      this.durationPlayer = 0;
-      if (this.RecorderInfoList.length > 0) {
-        this.durationPlayer = ((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000).toFixed(0);
+      //this.durationPlayer = 0;
+      if (this.RecorderInfoList.length > 1) {
+        this.durationPlayer = Math.trunc((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000);
       }
       this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
       if (this.playOn == false && this.VideoElement && this.RecorderBlobList && this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType) {
@@ -778,17 +805,23 @@ export default defineComponent({
         //
         this.VideoElement.onloadedmetadata = () => {
           console.log("onloadedmetadata()");
-          that.durationPlayer = Number.isFinite(that.VideoElement.duration) ? that.VideoElement.duration.toFixed(0) : that.durationPlayer;
+          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.durationPlayer;
+          if (that.durationPlayer < sec) {
+            that.durationPlayer = sec;
+          }
           console.log("Duration change", that.durationPlayer);
         };
         this.VideoElement.ondurationchange = () => {
           console.log("ondurationchange()");
-          that.durationPlayer = Number.isFinite(that.VideoElement.duration) ? that.VideoElement.duration.toFixed(0) : that.durationPlayer;
+          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.durationPlayer;
+          if (that.durationPlayer < sec) {
+            that.durationPlayer = sec;
+          }
           console.log("Duration change", that.durationPlayer);
         };
         this.VideoElement.ontimeupdate = () => {
           console.log(`currentTime ${that.VideoElement.currentTime.toFixed(2)} sec`);
-          that.PlayerPosition = that.VideoElement.currentTime ? that.VideoElement.currentTime.toFixed(0) : 0;
+          that.PlayerPosition = that.VideoElement.currentTime ? Math.trunc(that.VideoElement.currentTime) : 0;
           if (that.durationPlayer < that.PlayerPosition) {
             that.durationPlayer = that.PlayerPosition + 1;
           }
