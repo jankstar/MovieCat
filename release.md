@@ -1,6 +1,7 @@
-# MovieCat 0.2.3
+# MovieCat 0.2.4
 
 - file manager for chrome
+- confirmation dialog
 
 # MovieCat 0.2.3
 

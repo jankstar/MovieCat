@@ -25,11 +25,11 @@ Please note: the application must either use HTTPS or `localhost`, which is a pr
 It is a PWA app developed in Quasar and Vue with Tailwindcss.
 The application should be used in Chrome, because Chrome uses a certificate in interaction with a Mac, so that the application can access the screen, a camera or the microphone. Some other browsers do not support these functions!
 
-## resolution, frame rate
+## Resolution, frame rate
 
 Before starting the recording, the resolution and the frame rate should be adjusted. These settings determine the required memory or file size of the recording.
 
-## compression
+## Compression
 
 The media format depends on the capabilities of the browser. The file format and compression depend on these selections. The selection must be made before starting the recording.
 
@@ -40,7 +40,13 @@ Depending on the resolution, frame rate and compression, the recording time is t
 
 It would be possible to create several files, which you later join together with ffmpeg - this is not currently supported.
 
-# build
+## File api
+
+If the function `showDirectoryPicker` is available, a card for a directory and file handling is displayed. A file can be read and also written to this directory when saving (download button/function).
+Depending on the mime type, only files with the defined extension are displayed and can be loaded.
+For WebM, the file is decoded and the metadata, e.g. duration, is determined. This function is asynchronous and depends on the file size, it needs a few seconds.
+
+# Build
 
 The application is generated with the following command:
 

@@ -57,7 +57,7 @@ export default defineComponent({
 
       RecorderSlices: 10, //in sec
       RecorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
-      recorderAutoStop: 30, //min
+      recorderAutoStop: 30, //in min
       RecorderStartTime: undefined,
       RecorderBlobList: [],
       RecorderInfoList: [],
