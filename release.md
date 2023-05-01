@@ -1,7 +1,9 @@
 # MovieCat 0.2.4
 
 - file manager for chrome
-- confirmation dialog
+- new confirmation dialog
+- save mode in localstore
+- documetations
 
 # MovieCat 0.2.3
 

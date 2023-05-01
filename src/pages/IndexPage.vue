@@ -128,6 +128,7 @@ export default defineComponent({
     saveRecorderData() {
       console.log(`saveRecorderData()`);
 
+      localStorage.setItem("selMode", JSON.stringify(this.selMode));
       localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
       localStorage.setItem("RecorderSlices", JSON.stringify(this.RecorderSlices));
       localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
@@ -136,6 +137,14 @@ export default defineComponent({
     loadRecorderData() {
       console.log(`loadRecorderData()`);
       try {
+        const JSONrselMode = localStorage.getItem("selMode");
+        if (JSONrselMode) {
+          let selMode = JSON.parse(JSONrselMode);
+          if (selMode) {
+            this.selMode = selMode;
+          }
+        }
+
         const JSONrecorderOptions = localStorage.getItem("recorderOptions");
         if (JSONrecorderOptions) {
           let recorderOptions = JSON.parse(JSONrecorderOptions);
@@ -973,6 +982,7 @@ export default defineComponent({
             map-options
             :label="$t('Mode')"
             :disable="connectOn"
+            @update:model-value="saveRecorderData"
           />
           <br />
         </q-card-section>

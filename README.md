@@ -40,6 +40,9 @@ Depending on the resolution, frame rate and compression, the recording time is t
 
 It would be possible to create several files, which you later join together with ffmpeg - this is not currently supported.
 
+For decoding the WebM data, `arrayBuffer` objects are used; these are limited to 2 GByte - this function is only available for smaller files.
+The upload processes slices in 2 GByte blocks (array of blobs).
+
 ## File api
 
 If the function `showDirectoryPicker` is available, a card for a directory and file handling is displayed. A file can be read and also written to this directory when saving (download button/function).
