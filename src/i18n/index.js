@@ -5,6 +5,8 @@ export default {
 
     "On": "on",
     "Off": "off",
+    "Yes": "Yes",
+    "No": "No",
     "Cancel": "Cancel",
     "Save": "Save",
     "Mode": "Mode",
@@ -39,6 +41,7 @@ export default {
     "Size": "Size:",
     "Time": "Time",
     "Required": "* Required",
+    "Confirm": "Confirm",
 
     "InfoMovieCat": "Info about MovieCat",
     "InfoToggle": "Toggle dark and light mode.",
@@ -59,6 +62,8 @@ export default {
 
     "On": "ein",
     "Off": "aus",
+    "Yes": "Ja",
+    "No": "Nein",
     "Cancel": "Abbruch",
     "Save": "Sichern",
     "Mode": "Modus",
@@ -95,6 +100,7 @@ export default {
     "Required": "* Mussfeld",
     "InfoMin1": "Das Minimum ist 1 min",
     "InfoMax180": "Das Maximum sind 180 min",
+    "Confirm": "Bestätigung",
 
     "InfoMovieCat": "Info über MovieCat",
     "InfoToggle": "Umschalten zwischen Hell und Dunkel.",

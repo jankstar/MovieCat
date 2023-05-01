@@ -388,7 +388,7 @@ export default defineComponent({
         }
 
         if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
-          if ((await this.confirmDialog(this.$t("QMemory"))) == true) {
+          if ((await this.confirmDialog(this.$t("QMemory"), this.$t("Yes"), this.$t("No"))) == true) {
             this.clearBuffer();
             this.RecorderStartTime = Date.now();
           }
@@ -610,7 +610,7 @@ export default defineComponent({
       //file is loading in slices
       console.log(`loadFileBtn()`, iKey);
       if (this.RecorderBlobList.length > 0) {
-        if ((await this.confirmDialog(this.$t("QMemory"))) != true) {
+        if ((await this.confirmDialog(this.$t("QMemory"), this.$t("Yes"), this.$t("Cancel"))) != true) {
           //exit and return
           return;
         }
@@ -929,14 +929,24 @@ export default defineComponent({
       return `${l_std}:${l_min}:${l_sec}`;
     },
     //
-    confirmDialog(iMessage: string) {
+    confirmDialog(iMessage: string, iYes: string, iNo: string) {
       return new Promise((resolve) =>
         this.$q
           .dialog({
-            title: "Confirm",
+            title: this.$t("Confirm"),
             message: iMessage,
-            cancel: true,
+            ok: {
+              label: iYes,
+              push: iYes != "",
+              class: "tw-bg-lime-300",
+            },
+            cancel: {
+              label: iNo,
+              push: iNo != "",
+              class: "tw-bg-red-300",
+            },
             persistent: true,
+            class: "tw-font-sans",
           })
           .onOk(() => resolve(true))
           .onCancel(() => resolve(false))
