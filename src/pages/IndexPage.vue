@@ -55,8 +55,8 @@ export default defineComponent({
       videoBPSOptions: moviecat.ConstVideoBPSOptions,
       mimeTypeOptions: [],
 
-      recorderSlices: 10, //in sec
-      recorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
+      RecorderSlices: 10, //in sec
+      RecorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
       recorderAutoStop: 30, //min
       RecorderStartTime: undefined,
       RecorderBlobList: [],
@@ -64,15 +64,17 @@ export default defineComponent({
       RecorderSize: 0,
       RecorderState: "inactive",
 
+      LocalStopFunc: undefined,
+
       FileApi: false,
-      RecorderDir: "",
-      RecorderFileHandler: undefined,
-      RecorderFileEntries: [],
-      RecorderPickerID: 0,
+      FileApiDir: "",
+      FileApiFileHandler: undefined,
+      FileApiFileEntries: [],
+      FileApiPickerID: 0,
 
       VideoElement: undefined,
       PlayerPosition: 0, //Attention only integer in sec !
-      durationPlayer: 0, //Attention only integer in sec !
+      PlayerDuration: 0, //Attention only integer in sec !
       PlayerMuted: true,
       calculateDuration: false,
       playOn: false,
@@ -127,7 +129,7 @@ export default defineComponent({
       console.log(`saveRecorderData()`);
 
       localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
-      localStorage.setItem("recorderSlices", JSON.stringify(this.recorderSlices));
+      localStorage.setItem("RecorderSlices", JSON.stringify(this.RecorderSlices));
       localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
       //localStorage.setItem("fileName", JSON.stringify(this.fileName));
     },
@@ -142,11 +144,11 @@ export default defineComponent({
           }
         }
 
-        const JSONrecorderSlices = localStorage.getItem("recorderSlices");
+        const JSONRecorderSlices = localStorage.getItem("RecorderSlices");
         if (JSONrecorderOptions) {
-          let recorderSlices = JSON.parse(JSONrecorderSlices);
-          if (recorderSlices) {
-            this.recorderSlices = recorderSlices;
+          let RecorderSlices = JSON.parse(JSONRecorderSlices);
+          if (RecorderSlices) {
+            this.RecorderSlices = RecorderSlices;
           }
         }
 
@@ -387,9 +389,7 @@ export default defineComponent({
 
         if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
           if ((await this.confirmDialog(this.$t("QMemory"))) == true) {
-            this.RecorderBlobList = [];
-            this.RecorderInfoList = [];
-            this.RecorderSize = 0;
+            this.clearBuffer();
             this.RecorderStartTime = Date.now();
           }
         }
@@ -412,6 +412,9 @@ export default defineComponent({
           if (that.RecorderCounterJob) {
             that.stopTimer();
           }
+          if (that.LocalStopFunc) {
+            that.LocalStopFunc();
+          }
         };
 
         this.Recorder.onerror = (e: any) => {
@@ -433,7 +436,7 @@ export default defineComponent({
           console.log("onstart()");
 
           that.RecorderState = that.Recorder && that.Recorder.state ? that.Recorder.state : "inactive";
-          if (that.recorderSlices != 1) {
+          if (that.RecorderSlices != 1) {
             //only if no 1 sec slices
             that.startTimer();
           }
@@ -483,8 +486,8 @@ export default defineComponent({
       await this.newMediaRecorder();
 
       if (this.Recorder && this.Recorder.state == "inactive") {
-        if (this.recorderSlices && this.recorderSlices > 0) {
-          this.Recorder.start(1000 * this.recorderSlices); //1 * x sec Slices
+        if (this.RecorderSlices && this.RecorderSlices > 0) {
+          this.Recorder.start(1000 * this.RecorderSlices); //1 * x sec Slices
         } else {
           this.Recorder.start(); //ohne slices
         }
@@ -493,9 +496,11 @@ export default defineComponent({
           this.RecorderStartTime = Date.now();
         }
 
+        this.LocalStopFunc = undefined;
         this.TimeOutID = setTimeout(function () {
+          that.LocalStopFunc = that.download;
           that.stopRecorder();
-          that.download();
+          //that.download();
           that.TimeOutID = undefined;
         }, 1000 * 60 * this.recorderAutoStop); //180 min = 3h
       }
@@ -523,11 +528,11 @@ export default defineComponent({
       console.log(`download: ${this.RecorderBlobList.length} blobs`);
       this.SpinnerOn = true;
       if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
-        if (this.RecorderFileHandler && this.RecorderFileHandler.name) {
+        if (this.FileApiFileHandler && this.FileApiFileHandler.name) {
           //
           let lFielname = `${this.fileName}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
           try {
-            let lFileHandler = await this.RecorderFileHandler.getFileHandle(lFielname, { create: true });
+            let lFileHandler = await this.FileApiFileHandler.getFileHandle(lFielname, { create: true });
             const lWritable = await lFileHandler.createWritable();
 
             const blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
@@ -566,32 +571,32 @@ export default defineComponent({
         if (!window.showDirectoryPicker) {
           throw Error("file api not supported");
         }
-        if (!this.RecorderPickerID) {
-          this.RecorderPickerID = (Math.random() * 100).toFixed(0);
+        if (!this.FileApiPickerID) {
+          this.FileApiPickerID = (Math.random() * 100).toFixed(0);
         }
-        if (!this.RecorderFileHandler) {
+        if (!this.FileApiFileHandler) {
           // @ts-ignore
-          this.RecorderFileHandler = await window.showDirectoryPicker({
-            id: this.RecorderPickerID,
+          this.FileApiFileHandler = await window.showDirectoryPicker({
+            id: this.FileApiPickerID,
             mode: "readwrite",
             startIn: "downloads",
           });
         } else {
           // @ts-ignore
-          this.RecorderFileHandler = await window.showDirectoryPicker({
-            id: this.RecorderPickerID,
+          this.FileApiFileHandler = await window.showDirectoryPicker({
+            id: this.FileApiPickerID,
             mode: "readwrite",
           });
         }
-        if (this.RecorderFileHandler) {
-          console.log(`openDirBtn() ${this.RecorderFileHandler.name}`);
-          this.RecorderPickerID = 0;
+        if (this.FileApiFileHandler) {
+          console.log(`openDirBtn() ${this.FileApiFileHandler.name}`);
+          this.FileApiPickerID = 0;
         }
-        this.RecorderFileEntries = [];
+        this.FileApiFileEntries = [];
         let lExtension = `.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
-        for await (const [key, value] of this.RecorderFileHandler.entries()) {
+        for await (const [key, value] of this.FileApiFileHandler.entries()) {
           if (value.kind == "file" && value.name.endsWith(lExtension)) {
-            that.RecorderFileEntries.push({ key, value });
+            that.FileApiFileEntries.push({ key, value });
             console.log(`file: ${value.name}`);
           }
         }
@@ -601,32 +606,21 @@ export default defineComponent({
       }
     },
     //
-    readAsArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(blob);
-        reader.onloadend = () => {
-          resolve(<ArrayBuffer>reader.result);
-        };
-        reader.onerror = (ev) => {
-          reject(ev);
-        };
-      });
-    },
-
-    //
     async loadFileBtn(iKey: string) {
       //file is loading in slices
       console.log(`loadFileBtn()`, iKey);
+      if (this.RecorderBlobList.length > 0) {
+        if ((await this.confirmDialog(this.$t("QMemory"))) != true) {
+          //exit and return
+          return;
+        }
+      }
       this.SpinnerOn = true;
       try {
-        let lFileHandler = await this.RecorderFileHandler.getFileHandle(iKey);
+        let lFileHandler = await this.FileApiFileHandler.getFileHandle(iKey);
         const file = await lFileHandler.getFile();
         let lSize = file.size;
-        this.RecorderBlobList = [];
-        this.RecorderInfoList = [];
-        this.RecorderSize = 0;
-        this.RecorderCounter = 0;
+        this.clearBuffer();
         this.RecorderStartTime = Date.now();
         let lRecorderTime = this.RecorderStartTime;
         let lStart = 0;
@@ -661,7 +655,6 @@ export default defineComponent({
           this.RecorderSize += lContenSize;
         }
         this.fileName = iKey.substring(0, iKey.indexOf(`.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`));
-        this.PlayerPosition = 0;
 
         if (this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType.includes("webm")) {
           //if webm then decode
@@ -687,8 +680,10 @@ export default defineComponent({
                 reader.stop();
                 const sec = (reader.duration * reader.timecodeScale) / 1000 / 1000; // / 1000;
                 console.log(`duration ${that.computeTime(sec)}`);
-                that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
-                that.durationPlayer = sec;
+                if (that.RecorderInfoList.length > 0) {
+                  that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
+                }
+                that.PlayerDuration = sec;
                 that.calculateDuration = false;
               })
               .catch((e) => {
@@ -714,6 +709,7 @@ export default defineComponent({
       this.RecorderInfoList = [];
       this.RecorderSize = 0;
       this.RecorderCounter = 0;
+      this.PlayerPosition = 0;
       this.RecorderStartTime = undefined;
     },
     //
@@ -826,9 +822,9 @@ export default defineComponent({
     playOnBtn() {
       console.log(`playOnBtn()`);
       let that = this;
-      //this.durationPlayer = 0;
+      //this.PlayerDuration = 0;
       if (this.RecorderInfoList.length > 1) {
-        this.durationPlayer = Math.trunc((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000);
+        this.PlayerDuration = Math.trunc((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000);
         this.RecorderStartTime = this.RecorderInfoList[0].time;
       }
       this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
@@ -837,33 +833,39 @@ export default defineComponent({
         //
         this.VideoElement.onloadedmetadata = () => {
           console.log("onloadedmetadata()");
-          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.durationPlayer;
-          if (that.durationPlayer < sec) {
-            that.durationPlayer = sec;
+          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.PlayerDuration;
+          if (that.PlayerDuration < sec) {
+            that.PlayerDuration = sec;
             if (that.RecorderInfoList.length > 1) {
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderInfoList[0].time + Math.trunc(that.VideoElement.duration * 1000);
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + Math.trunc(that.VideoElement.duration * 1000);
+            } else if (that.RecorderInfoList.length == 1) {
+              that.RecorderStartTime = that.RecorderInfoList[0].time - Math.trunc(that.VideoElement.duration * 1000);
             }
           }
-          console.log("Duration change", that.durationPlayer);
+          console.log("Duration change", that.PlayerDuration);
         };
         this.VideoElement.ondurationchange = () => {
           console.log("ondurationchange()");
-          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.durationPlayer;
-          if (that.durationPlayer < sec) {
-            that.durationPlayer = sec;
+          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.PlayerDuration;
+          if (that.PlayerDuration < sec) {
+            that.PlayerDuration = sec;
             if (that.RecorderInfoList.length > 1) {
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderInfoList[0].time + Math.trunc(that.VideoElement.duration * 1000);
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + Math.trunc(that.VideoElement.duration * 1000);
+            } else if (that.RecorderInfoList.length == 1) {
+              that.RecorderStartTime = that.RecorderInfoList[0].time - Math.trunc(that.VideoElement.duration * 1000);
             }
           }
-          console.log("Duration change", that.durationPlayer);
+          console.log("Duration change", that.PlayerDuration);
         };
         this.VideoElement.ontimeupdate = () => {
           console.log(`currentTime ${that.VideoElement.currentTime.toFixed(2)} sec`);
           that.PlayerPosition = that.VideoElement.currentTime ? Math.trunc(that.VideoElement.currentTime) : 0;
-          if (that.durationPlayer < that.PlayerPosition) {
-            that.durationPlayer = that.PlayerPosition + 1;
+          if (that.PlayerDuration < that.PlayerPosition) {
+            that.PlayerDuration = that.PlayerPosition + 1;
             if (that.RecorderInfoList.length > 1) {
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderInfoList[0].time + Math.trunc(that.VideoElement.duration * 1000);
+              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + Math.trunc(that.VideoElement.duration * 1000);
+            } else if (that.RecorderInfoList.length == 1) {
+              that.RecorderStartTime = that.RecorderInfoList[0].time - Math.trunc(that.VideoElement.duration * 1000);
             }
           }
         };
@@ -1039,7 +1041,7 @@ export default defineComponent({
         <q-card-section>
           <h7 v-if="RecorderInfoList" class="text-body2">{{ $t("Time") }}: {{ computeTime(PlayerPosition) }}</h7>
           <br />
-          <q-slider v-model="PlayerPosition" :min="0" :max="durationPlayer" label style="width: 90%" />
+          <q-slider v-model="PlayerPosition" :min="0" :max="PlayerDuration" label style="width: 90%" />
           <br />
           <q-select
             v-model="playbackRate"
@@ -1121,8 +1123,8 @@ export default defineComponent({
             </div>
             <div class="row">
               <q-select
-                v-model="recorderSlices"
-                :options="recorderSlicesOptions"
+                v-model="RecorderSlices"
+                :options="RecorderSlicesOptions"
                 emit-value
                 map-options
                 :label="$t('Slice_length')"
@@ -1172,12 +1174,12 @@ export default defineComponent({
       <q-card v-if="FileApi" style="width: 600px">
         <q-card-section v-if="FileApi">
           <div class="row tw-justify-between">
-            <h7 class="text-subtitle1"> Files {{ `*/${RecorderFileHandler && RecorderFileHandler.name ? RecorderFileHandler.name : "?"}: ${RecorderFileEntries.length || 0}` }}</h7>
+            <h7 class="text-subtitle1"> Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</h7>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
           </div>
           <br />
 
-          <q-virtual-scroll style="max-height: 300px" :items="RecorderFileEntries" separator v-slot="{ item, index }">
+          <q-virtual-scroll style="max-height: 280px" :items="FileApiFileEntries" separator v-slot="{ item, index }">
             <q-item :key="index" dense>
               <q-item-section>
                 <q-item-label>
