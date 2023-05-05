@@ -10,5 +10,6 @@
   "appService.deploySubpath": ".",
 
   "go.buildFlags": ["-tags=functional"],
-  "go.testTags": "functional"
+  "go.testTags": "functional",
+  "workbench.settings.openDefaultSettings": true
 }

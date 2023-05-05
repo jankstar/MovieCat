@@ -404,6 +404,7 @@ export default defineComponent({
           if (e.data && e.data.size > 0) {
             that.FileData.BlobList.push(e.data);
             that.FileData.EndTime = Date.now();
+            that.FileData.Duration = Math.trunc((that.FileData.EndTime - that.FileData.StartTime) / 1000);
             that.FileData.Size += e.data.size;
             that.RecorderCounter = 0;
           }
@@ -824,7 +825,7 @@ export default defineComponent({
       draw();
     },
     //
-    playOnBtn() {
+    async playOnBtn() {
       console.log(`playOnBtn()`);
       let that = this;
 
@@ -881,7 +882,11 @@ export default defineComponent({
         this.VideoElement.src = url;
         this.VideoElement.currentTime = this.FileData.Position;
         this.VideoElement.playbackRate = this.playbackRate;
-        this.VideoElement.play();
+        try {
+          await this.VideoElement.play();
+        } catch (e) {
+          console.error(e);
+        }
       }
     },
     playOffBtn() {
@@ -908,8 +913,28 @@ export default defineComponent({
         myVideoTag.muted = false;
       }
     },
-    changePosBtn(iSec) {
+    async changePosBtn(iSec) {
       console.log(`muteOffBtn(${iSec})`);
+      if (iSec < 0) {
+        this.FileData.Position = 0;
+      } else if (iSec > this.FileData.Duration) {
+        this.FileData.Position = this.FileData.Duration;
+      } else {
+        this.FileData.Position = iSec;
+      }
+
+      if (this.playOn) {
+        this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
+        if (this.VideoElement) {
+          this.VideoElement.pause();
+          this.VideoElement.currentTime = this.FileData.Position;
+          try {
+            await this.VideoElement.play();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
     },
     changePlaybackRate(value: any) {
       console.log(`muteOffBtn()`);
@@ -1046,7 +1071,7 @@ export default defineComponent({
       </q-card>
 
       <!-- play video from file/recorder -->
-      <q-card v-if="!connectOn && selMode == 'player'" style="max-width: 300px">
+      <q-card v-if="!connectOn && selMode == 'player'" style="min-width: 300px; max-width: 60%" class="tw-grow">
         <q-card-section>
           <h7 class="text-subtitle1">Video Player </h7><br />
           <video id="id_video_player" playsinline muted style="background-color: black"></video>
@@ -1054,7 +1079,7 @@ export default defineComponent({
         <q-card-section>
           <h7 v-if="FileData.StartTime != FileData.EndTime" class="text-body2">{{ $t("Time") }}: {{ computeTime(FileData.Position) }}</h7>
           <br />
-          <q-slider v-model="FileData.Position" :min="0" :max="FileData.Duration" label style="width: 90%" />
+          <q-slider v-model="FileData.Position" :min="0" :max="FileData.Duration" label />
           <br />
           <q-select
             v-model="playbackRate"
@@ -1062,7 +1087,7 @@ export default defineComponent({
             emit-value
             map-options
             :label="$t('PlaybackRate')"
-            style="width: 50%"
+            style="width: 50%; max-width: 120px"
             @update:model-value="changePlaybackRate"
           />
         </q-card-section>

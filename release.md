@@ -1,3 +1,8 @@
+# MovieCat 0.2.5
+
+- flex grid for player
+- 10sec buttons / seek
+
 # MovieCat 0.2.4
 
 - file manager for chrome
