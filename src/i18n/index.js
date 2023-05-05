@@ -43,6 +43,11 @@ export default {
     "Required": "* Required",
     "Confirm": "Confirm",
 
+    "Start": "Start",
+    "End": "End",
+    "10_sec_replay": "10 sec replay",
+    "10_sec_forward": "10 sec forward",
+
     "InfoMovieCat": "Info about MovieCat",
     "InfoToggle": "Toggle dark and light mode.",
     "InfoPrivacyPolicy": "Info about Privacy Policy",
@@ -101,6 +106,11 @@ export default {
     "InfoMin1": "Das Minimum ist 1 min",
     "InfoMax180": "Das Maximum sind 180 min",
     "Confirm": "Bestätigung",
+
+    "Start": "Start",
+    "End": "Ende",
+    "10_sec_replay": "10 sec zurück",
+    "10_sec_forward": "10 sec vorwärts",
 
     "InfoMovieCat": "Info über MovieCat",
     "InfoToggle": "Umschalten zwischen Hell und Dunkel.",

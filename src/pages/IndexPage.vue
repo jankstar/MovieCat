@@ -5,6 +5,7 @@ import AudioSettingComp from "components/AudioSettingComp.vue";
 import VideoSettingComp from "components/VideoSettingComp.vue";
 import moviecat from "src/lib/moviecat.js";
 import * as ebml from "ts-ebml";
+import type { EBMLElementDetail } from "ts-ebml";
 
 export default defineComponent({
   name: "IndexPage",
@@ -58,11 +59,17 @@ export default defineComponent({
       RecorderSlices: 10, //in sec
       RecorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
       recorderAutoStop: 30, //in min
-      RecorderStartTime: undefined,
-      RecorderBlobList: [],
-      RecorderInfoList: [],
-      RecorderSize: 0,
       RecorderState: "inactive",
+
+      FileData: {
+        Name: "test",
+        StartTime: undefined,
+        EndTime: undefined,
+        Size: 0,
+        BlobList: [],
+        Duration: 0, //Attention only integer in sec !
+        Position: 0, //Attention only integer in sec !
+      },
 
       LocalStopFunc: undefined,
 
@@ -73,15 +80,12 @@ export default defineComponent({
       FileApiPickerID: 0,
 
       VideoElement: undefined,
-      PlayerPosition: 0, //Attention only integer in sec !
-      PlayerDuration: 0, //Attention only integer in sec !
       PlayerMuted: true,
       calculateDuration: false,
       playOn: false,
       playbackRate: 1,
       playbackRateOptions: moviecat.ConstPlaybackRateOptions,
       TimeOutID: undefined,
-      fileName: "test",
       OnOffOptions: [],
     };
   },
@@ -132,7 +136,6 @@ export default defineComponent({
       localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
       localStorage.setItem("RecorderSlices", JSON.stringify(this.RecorderSlices));
       localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
-      //localStorage.setItem("fileName", JSON.stringify(this.fileName));
     },
     loadRecorderData() {
       console.log(`loadRecorderData()`);
@@ -168,14 +171,6 @@ export default defineComponent({
             this.recorderAutoStop = recorderAutoStop;
           }
         }
-
-        // const JSONfileName = localStorage.getItem("fileName");
-        // if (JSONfileName) {
-        //   let fileName = JSON.parse(JSONfileName);
-        //   if (fileName) {
-        //     this.fileName = fileName;
-        //   }
-        // }
       } catch (e) {
         console.error(e);
       }
@@ -396,10 +391,10 @@ export default defineComponent({
           throw new Error(this.$t("InfoNoMediaStream"));
         }
 
-        if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
+        if (this.FileData.BlobList && this.FileData.BlobList.length > 0) {
           if ((await this.confirmDialog(this.$t("QMemory"), this.$t("Yes"), this.$t("No"))) == true) {
             this.clearBuffer();
-            this.RecorderStartTime = Date.now();
+            this.FileData.StartTime = Date.now();
           }
         }
         this.Recorder = new MediaRecorder(this.MainStream, this.recorderOptions);
@@ -407,9 +402,9 @@ export default defineComponent({
         this.Recorder.ondataavailable = (e) => {
           console.log(`type: ${e.type} time: ${e.timecode} size: ${e.data.size}`);
           if (e.data && e.data.size > 0) {
-            that.RecorderBlobList.push(e.data);
-            that.RecorderInfoList.push({ type: e.type, time: Date.now(), size: e.data.size });
-            that.RecorderSize += e.data.size;
+            that.FileData.BlobList.push(e.data);
+            that.FileData.EndTime = Date.now();
+            that.FileData.Size += e.data.size;
             that.RecorderCounter = 0;
           }
         };
@@ -501,8 +496,8 @@ export default defineComponent({
           this.Recorder.start(); //ohne slices
         }
 
-        if (!this.RecorderStartTime) {
-          this.RecorderStartTime = Date.now();
+        if (!this.FileData.StartTime) {
+          this.FileData.StartTime = Date.now();
         }
 
         this.LocalStopFunc = undefined;
@@ -534,17 +529,17 @@ export default defineComponent({
     },
     //
     async download() {
-      console.log(`download: ${this.RecorderBlobList.length} blobs`);
+      console.log(`download: ${this.FileData.BlobList.length} blobs`);
       this.SpinnerOn = true;
-      if (this.RecorderBlobList && this.RecorderBlobList.length > 0) {
+      if (this.FileData.BlobList && this.FileData.BlobList.length > 0) {
         if (this.FileApiFileHandler && this.FileApiFileHandler.name) {
           //
-          let lFielname = `${this.fileName}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+          let lFielname = `${this.FileData.Name}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
           try {
             let lFileHandler = await this.FileApiFileHandler.getFileHandle(lFielname, { create: true });
             const lWritable = await lFileHandler.createWritable();
 
-            const blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
+            const blob = new Blob(this.FileData.BlobList, { type: this.recorderOptions.mimeType });
 
             await lWritable.write(blob);
             await lWritable.close();
@@ -554,12 +549,12 @@ export default defineComponent({
           }
         } else {
           //standard download without file api
-          const blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
+          const blob = new Blob(this.FileData.BlobList, { type: this.recorderOptions.mimeType });
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.style.display = "none";
           a.href = url;
-          a.download = `${this.fileName}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+          a.download = `${this.FileData.Name}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
           console.log(`filename ${a.download}`);
           document.body.appendChild(a);
           a.click();
@@ -618,7 +613,7 @@ export default defineComponent({
     async loadFileBtn(iKey: string) {
       //file is loading in slices
       console.log(`loadFileBtn()`, iKey);
-      if (this.RecorderBlobList.length > 0) {
+      if (this.FileData.BlobList.length > 0) {
         if ((await this.confirmDialog(this.$t("QMemory"), this.$t("Yes"), this.$t("Cancel"))) != true) {
           //exit and return
           return;
@@ -630,8 +625,8 @@ export default defineComponent({
         const file = await lFileHandler.getFile();
         let lSize = file.size;
         this.clearBuffer();
-        this.RecorderStartTime = Date.now();
-        let lRecorderTime = this.RecorderStartTime;
+        this.FileData.StartTime = Date.now();
+        let lRecorderTime = this.FileData.StartTime;
         let lStart = 0;
 
         while (lSize > 0) {
@@ -652,7 +647,7 @@ export default defineComponent({
             content = await file.arrayBuffer();
           }
 
-          this.RecorderBlobList.push(content);
+          this.FileData.BlobList.push(content);
           if (content.byteLength) {
             lContenSize = content.byteLength;
           } else {
@@ -660,12 +655,12 @@ export default defineComponent({
           }
           console.log(`time: ${lRecorderTime} + ${Math.trunc(lContenSize / (0.25 * 1024))}`); //2,5 mByte /msec
           lRecorderTime += Math.trunc(lContenSize / (0.25 * 1024));
-          this.RecorderInfoList.push({ type: "blob", time: lRecorderTime, size: lContenSize });
-          this.RecorderSize += lContenSize;
+          this.FileData.EndTime = lRecorderTime;
+          this.FileData.Size += lContenSize;
         }
-        this.fileName = iKey.substring(0, iKey.indexOf(`.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`));
+        this.FileData.Name = iKey.substring(0, iKey.indexOf(`.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`));
 
-        if (this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType.includes("webm")) {
+        if (this.FileData.BlobList.length > 0 && this.recorderOptions.mimeType.includes("webm")) {
           //if webm then decode
           try {
             this.calculateDuration = true;
@@ -674,25 +669,26 @@ export default defineComponent({
             const reader = new ebml.Reader();
             //decode only the first blob due to memory limitation
             let blob = <Blob>{};
-            if (this.RecorderBlobList.length == 1) {
-              blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
+            if (this.FileData.BlobList.length == 1) {
+              blob = new Blob(this.FileData.BlobList, { type: this.recorderOptions.mimeType });
             } else {
-              blob = this.RecorderBlobList[0];
+              blob = this.FileData.BlobList[0];
             }
             blob
               .arrayBuffer()
               .then((abuffer) => {
-                const ebmlElms = <any>decoder.decode(abuffer);
+                const ebmlElms = <EBMLElementDetail[]>decoder.decode(abuffer);
                 ebmlElms.forEach((elm) => {
                   reader.read(elm);
                 });
                 reader.stop();
                 const sec = (reader.duration * reader.timecodeScale) / 1000 / 1000; // / 1000;
                 console.log(`duration ${that.computeTime(sec)}`);
-                if (that.RecorderInfoList.length > 0) {
-                  that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + sec * 1000;
+                if (that.FileData.StartTime == undefined) {
+                  that.FileData.StartTime = 0;
                 }
-                that.PlayerDuration = sec;
+                that.FileData.EndTime = that.FileData.StartTime + sec * 1000;
+                that.FileData.Duration = sec;
                 that.calculateDuration = false;
               })
               .catch((e) => {
@@ -714,12 +710,12 @@ export default defineComponent({
     },
     //
     clearBuffer() {
-      this.RecorderBlobList = [];
-      this.RecorderInfoList = [];
-      this.RecorderSize = 0;
+      this.FileData.BlobList = [];
       this.RecorderCounter = 0;
-      this.PlayerPosition = 0;
-      this.RecorderStartTime = undefined;
+      this.FileData.Position = 0;
+      this.FileData.StartTime = undefined;
+      this.FileData.EndTime = undefined;
+      this.FileData.Size = 0;
     },
     //
     uuidv4(): string {
@@ -831,51 +827,45 @@ export default defineComponent({
     playOnBtn() {
       console.log(`playOnBtn()`);
       let that = this;
-      //this.PlayerDuration = 0;
-      if (this.RecorderInfoList.length > 1) {
-        this.PlayerDuration = Math.trunc((this.RecorderInfoList[this.RecorderInfoList.length - 1].time - this.RecorderInfoList[0].time) / 1000);
-        this.RecorderStartTime = this.RecorderInfoList[0].time;
-      }
+
       this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (this.playOn == false && this.VideoElement && this.RecorderBlobList && this.RecorderBlobList.length > 0 && this.recorderOptions.mimeType) {
+      if (this.playOn == false && this.VideoElement && this.FileData.BlobList && this.FileData.BlobList.length > 0 && this.recorderOptions.mimeType) {
         this.VideoElement.pause(); //player stoppen
         //
         this.VideoElement.onloadedmetadata = () => {
           console.log("onloadedmetadata()");
-          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.PlayerDuration;
-          if (that.PlayerDuration < sec) {
-            that.PlayerDuration = sec;
-            if (that.RecorderInfoList.length > 1) {
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + Math.trunc(that.VideoElement.duration * 1000);
-            } else if (that.RecorderInfoList.length == 1) {
-              that.RecorderStartTime = that.RecorderInfoList[0].time - Math.trunc(that.VideoElement.duration * 1000);
+          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.FileData.Duration;
+          if (sec && that.FileData.Duration < sec) {
+            that.FileData.Duration = sec;
+            if (that.FileData.StartTime == undefined) {
+              that.FileData.StartTime = 0;
             }
+            that.FileData.EndTime = that.FileData.StartTime + Math.trunc(that.FileData.Duration * 1000);
           }
-          console.log("Duration change", that.PlayerDuration);
+          console.log("Duration change", that.FileData.Duration);
         };
         this.VideoElement.ondurationchange = () => {
           console.log("ondurationchange()");
-          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.PlayerDuration;
-          if (that.PlayerDuration < sec) {
-            that.PlayerDuration = sec;
-            if (that.RecorderInfoList.length > 1) {
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + Math.trunc(that.VideoElement.duration * 1000);
-            } else if (that.RecorderInfoList.length == 1) {
-              that.RecorderStartTime = that.RecorderInfoList[0].time - Math.trunc(that.VideoElement.duration * 1000);
+          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.FileData.Duration;
+          if (sec && that.FileData.Duration < sec) {
+            that.FileData.Duration = sec;
+            if (that.FileData.StartTime == undefined) {
+              that.FileData.StartTime = 0;
             }
+            that.FileData.EndTime = that.FileData.StartTime + Math.trunc(that.FileData.Duration * 1000);
           }
-          console.log("Duration change", that.PlayerDuration);
+          console.log("Duration change", that.FileData.Duration);
         };
         this.VideoElement.ontimeupdate = () => {
           console.log(`currentTime ${that.VideoElement.currentTime.toFixed(2)} sec`);
-          that.PlayerPosition = that.VideoElement.currentTime ? Math.trunc(that.VideoElement.currentTime) : 0;
-          if (that.PlayerDuration < that.PlayerPosition) {
-            that.PlayerDuration = that.PlayerPosition + 1;
-            if (that.RecorderInfoList.length > 1) {
-              that.RecorderInfoList[that.RecorderInfoList.length - 1].time = that.RecorderStartTime + Math.trunc(that.VideoElement.duration * 1000);
-            } else if (that.RecorderInfoList.length == 1) {
-              that.RecorderStartTime = that.RecorderInfoList[0].time - Math.trunc(that.VideoElement.duration * 1000);
+          that.FileData.Position =
+            that.VideoElement.currentTime && Number.isFinite(that.VideoElement.currentTime) ? Math.trunc(that.VideoElement.currentTime) : that.FileData.Position;
+          if (that.FileData.Position && that.FileData.Duration < that.FileData.Position) {
+            that.FileData.Duration = that.FileData.Position + 1;
+            if (that.FileData.StartTime == undefined) {
+              that.FileData.StartTime = 0;
             }
+            that.FileData.EndTime = that.FileData.StartTime + Math.trunc(that.FileData.Duration * 1000);
           }
         };
         this.VideoElement.onended = () => {
@@ -885,11 +875,11 @@ export default defineComponent({
           that.playOn = true;
         };
         //
-        //        var url = window.URL.createObjectURL(this.RecorderBlobList[this.PlayerPosition]);
-        let blob = new Blob(this.RecorderBlobList, { type: this.recorderOptions.mimeType });
+        //        var url = window.URL.createObjectURL(this.FileData.BlobList[this.FileData.Position]);
+        let blob = new Blob(this.FileData.BlobList, { type: this.recorderOptions.mimeType });
         let url = window.URL.createObjectURL(blob);
         this.VideoElement.src = url;
-        this.VideoElement.currentTime = this.PlayerPosition;
+        this.VideoElement.currentTime = this.FileData.Position;
         this.VideoElement.playbackRate = this.playbackRate;
         this.VideoElement.play();
       }
@@ -917,6 +907,9 @@ export default defineComponent({
         this.PlayerMuted = false;
         myVideoTag.muted = false;
       }
+    },
+    changePosBtn(iSec) {
+      console.log(`muteOffBtn(${iSec})`);
     },
     changePlaybackRate(value: any) {
       console.log(`muteOffBtn()`);
@@ -967,7 +960,7 @@ export default defineComponent({
 
 <template>
   <q-page class="q-pa-md">
-    <div class="tw-grid-flow tw-items-start row tw-gap-4">
+    <div class="tw-flex tw-items-start tw-flex-wrap tw-gap-4">
       <!-- input and mode -->
       <q-card style="max-width: 300px">
         <q-card-section>
@@ -1059,9 +1052,9 @@ export default defineComponent({
           <video id="id_video_player" playsinline muted style="background-color: black"></video>
         </q-card-section>
         <q-card-section>
-          <h7 v-if="RecorderInfoList" class="text-body2">{{ $t("Time") }}: {{ computeTime(PlayerPosition) }}</h7>
+          <h7 v-if="FileData.StartTime != FileData.EndTime" class="text-body2">{{ $t("Time") }}: {{ computeTime(FileData.Position) }}</h7>
           <br />
-          <q-slider v-model="PlayerPosition" :min="0" :max="PlayerDuration" label style="width: 90%" />
+          <q-slider v-model="FileData.Position" :min="0" :max="FileData.Duration" label style="width: 90%" />
           <br />
           <q-select
             v-model="playbackRate"
@@ -1075,36 +1068,48 @@ export default defineComponent({
         </q-card-section>
         <q-separator />
 
-        <q-card-actions class="tw-justify-end">
+        <q-card-actions class="tw-grid tw-grid-rows-2 tw-gap-4 tw-justify-center">
+          <div>
+            <q-btn icon="skip_previous" @click="changePosBtn(0)"
+              ><q-tooltip>{{ $t("Start") }}</q-tooltip></q-btn
+            >
+            <q-btn icon="replay_10" @click="changePosBtn(FileData.Position - 10)"
+              ><q-tooltip>{{ $t("10_sec_replay") }}</q-tooltip></q-btn
+            >
+            <q-btn
+              :label="!playOn ? $t('Play') : $t('Stop')"
+              @click="!playOn ? playOnBtn() : playOffBtn()"
+              :icon="!playOn ? 'play_circle' : 'stop_circle'"
+              :class="!playOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
+              :disable="!FileData.BlobList || FileData.BlobList.length == 0"
+            />
+            <q-btn icon="forward_10" @click="changePosBtn(FileData.Position + 10)"
+              ><q-tooltip>{{ $t("10_sec_forward") }}</q-tooltip></q-btn
+            >
+            <q-btn icon="skip_next" @click="changePosBtn(FileData.Duration)"
+              ><q-tooltip>{{ $t("End") }}</q-tooltip></q-btn
+            >
+          </div>
           <!-- -->
-          <q-btn @click="$q.fullscreen.toggle(VideoElement)" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" />
-          <q-btn :label="!PlayerMuted ? $t('Mute') : $t('Mute_off')" @click="!PlayerMuted ? muteOnBtn() : muteOffBtn()" :icon="!PlayerMuted ? 'volume_up' : 'volume_off'" />
-          <q-btn
-            :label="!playOn ? $t('Play') : $t('Stop')"
-            @click="!playOn ? playOnBtn() : playOffBtn()"
-            :icon="!playOn ? 'play_circle' : 'stop_circle'"
-            :class="!playOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
-            :disable="!RecorderBlobList || RecorderBlobList.length == 0"
-          />
+          <div>
+            <q-btn @click="$q.fullscreen.toggle(VideoElement)" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" />
+            <q-btn :label="!PlayerMuted ? $t('Mute') : $t('Mute_off')" @click="!PlayerMuted ? muteOnBtn() : muteOffBtn()" :icon="!PlayerMuted ? 'volume_up' : 'volume_off'" />
+          </div>
         </q-card-actions>
       </q-card>
 
       <!-- recorder -->
-      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || RecorderSize > 0" style="max-width: 300px">
+      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || FileData.Size > 0" style="max-width: 300px">
         <q-card-section>
           <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
 
-          <h7 class="text-body2">{{ `${$t("Size")} ${(RecorderSize / 1000000).toFixed(2)}` }} mByte </h7>
+          <h7 class="text-body2">{{ `${$t("Size")} ${(FileData.Size / 1000000).toFixed(2)}` }} mByte </h7>
           <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
           <br />
           <div class="row">
             <h7 class="text-body2"
               >{{ $t("Time") }}:
-              {{
-                RecorderStartTime && RecorderInfoList && RecorderInfoList.length > 0
-                  ? computeTime((RecorderInfoList[RecorderInfoList.length - 1].time - RecorderStartTime) / 1000 + RecorderCounter)
-                  : computeTime(RecorderCounter)
-              }}
+              {{ FileData.StartTime && FileData.EndTime ? computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter) : computeTime(RecorderCounter) }}
             </h7>
             <q-spinner-hourglass v-if="calculateDuration" color="primary" size="1em" />
             <h7 v-if="calculateDuration" style="font-size: 10px">calculate duration</h7>
@@ -1116,7 +1121,7 @@ export default defineComponent({
             emit-value
             map-options
             :label="$t('Recorder_mimetype')"
-            :disable="mimeTypeOptions.length == 0 || RecorderSize > 0 || RecorderState != 'inactive'"
+            :disable="mimeTypeOptions.length == 0 || FileData.Size > 0 || RecorderState != 'inactive'"
           />
           <div v-if="selMode == 'capture' || selMode == 'camera'">
             <div class="row">
@@ -1166,7 +1171,7 @@ export default defineComponent({
               />
             </div>
           </div>
-          <q-input v-model="fileName" :label="$t('Filename')" />
+          <q-input v-model="FileData.Name" :label="$t('Filename')" />
         </q-card-section>
         <q-separator />
 
@@ -1187,11 +1192,12 @@ export default defineComponent({
             :disable="RecorderState == 'inactive' || !connectOn"
             class="tw-bg-red-300"
           />
-          <q-btn label="download" @click="download" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="download" />
-          <q-btn label="clear" @click="clearBuffer" :disable="RecorderSize == 0 || RecorderState != 'inactive'" icon="delete_forever" />
+          <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="download" />
+          <q-btn label="clear" @click="clearBuffer" :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="delete_forever" />
         </q-card-actions>
       </q-card>
-      <q-card v-if="FileApi" style="width: 600px">
+
+      <q-card v-if="FileApi" class="" style="width: 600px">
         <q-card-section v-if="FileApi">
           <div class="row tw-justify-between">
             <h7 class="text-subtitle1"> Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</h7>
