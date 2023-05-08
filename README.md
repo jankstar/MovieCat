@@ -49,6 +49,10 @@ If the function `showDirectoryPicker` is available, a card for a directory and f
 Depending on the mime type, only files with the defined extension are displayed and can be loaded.
 For WebM, the file is decoded and the metadata, e.g. duration, is determined. This function is asynchronous and depends on the file size, it needs a few seconds.
 
+## supported codec
+
+The supported codec depends on the browser - Chrome in version 113, for example, only supports WebM as a container and VP8, VP9 or H.264 for video encoding. The media player, however, can play mp4. For this reason, only files with the WebM extension are selected in the file api. The button for native upload also loads any other file. For ts (mpeg), for example, only the sound is decoded and played on. So if you need a player, you should use VLC.
+
 # Build
 
 The application is generated with the following command:
