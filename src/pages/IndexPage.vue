@@ -60,9 +60,12 @@ export default defineComponent({
       RecorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
       recorderAutoStop: 30, //in min
       RecorderState: "inactive",
+      RecorderTimeOutID: undefined,
+      UploadOn: false,
 
       FileData: {
         Name: "test",
+        Extension: "",
         StartTime: undefined,
         EndTime: undefined,
         Size: 0,
@@ -78,15 +81,16 @@ export default defineComponent({
       FileApiFileHandler: undefined,
       FileApiFileEntries: [],
       FileApiPickerID: 0,
+      FileInput: undefined,
 
       VideoElement: undefined,
       PlayerMuted: true,
+      PlayerWaiting: false,
       calculateDuration: false,
       playOn: false,
       playbackRate: 1,
       playbackRateOptions: moviecat.ConstPlaybackRateOptions,
-      TimeOutID: undefined,
-      OnOffOptions: [],
+      //OnOffOptions: [],
     };
   },
 
@@ -104,14 +108,15 @@ export default defineComponent({
   async mounted() {
     try {
       console.log(`IndexPage mounted`);
-      this.OnOffOptions = [
-        { value: true, label: this.$t("On") },
-        { value: false, label: this.$t("Off") },
-      ];
+      // this.OnOffOptions = [
+      //   { value: true, label: this.$t("On") },
+      //   { value: false, label: this.$t("Off") },
+      // ];
 
       this.getMediaDevices();
 
       this.getMimeType();
+      this.FileData.Extension = this.recorderOptions.mimeType.split(";")[0].split("/")[1];
       //recorder data from localStorage
       this.loadRecorderData();
     } catch (e) {
@@ -121,10 +126,10 @@ export default defineComponent({
 
   updated() {
     console.log(`IndexPage updated`);
-    this.OnOffOptions = [
-      { value: true, label: this.$t("On") },
-      { value: false, label: this.$t("Off") },
-    ];
+    // this.OnOffOptions = [
+    //   { value: true, label: this.$t("On") },
+    //   { value: false, label: this.$t("Off") },
+    // ];
   },
 
   methods: {
@@ -392,7 +397,7 @@ export default defineComponent({
         }
 
         if (this.FileData.BlobList && this.FileData.BlobList.length > 0) {
-          if ((await this.confirmDialog(this.$t("QMemory"), this.$t("Yes"), this.$t("No"))) == true) {
+          if ((await this.confirmDialog(this.$t("Confirm"), this.$t("QMemory"), this.$t("Yes"), this.$t("No"))) == true) {
             this.clearBuffer();
             this.FileData.StartTime = Date.now();
           }
@@ -501,12 +506,14 @@ export default defineComponent({
           this.FileData.StartTime = Date.now();
         }
 
+        this.FileData.Extension = `${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+
         this.LocalStopFunc = undefined;
-        this.TimeOutID = setTimeout(function () {
+        this.RecorderTimeOutID = setTimeout(function () {
           that.LocalStopFunc = that.download;
           that.stopRecorder();
           //that.download();
-          that.TimeOutID = undefined;
+          that.RecorderTimeOutID = undefined;
         }, 1000 * 60 * this.recorderAutoStop); //180 min = 3h
       }
     },
@@ -514,9 +521,9 @@ export default defineComponent({
     stopRecorderBtn() {
       console.log(`stopRecorderBtn()`);
       this.stopRecorder();
-      if (this.TimeOutID) {
-        clearTimeout(this.TimeOutID);
-        this.TimeOutID = undefined;
+      if (this.RecorderTimeOutID) {
+        clearTimeout(this.RecorderTimeOutID);
+        this.RecorderTimeOutID = undefined;
       }
     },
     //
@@ -598,32 +605,64 @@ export default defineComponent({
           this.FileApiPickerID = 0;
         }
         this.FileApiFileEntries = [];
-        let lExtension = `.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+        let lExtension = `${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
         for await (const [key, value] of this.FileApiFileHandler.entries()) {
-          if (value.kind == "file" && value.name.endsWith(lExtension)) {
+          if (value.kind == "file" && value.name.endsWith(`.${lExtension}`)) {
             that.FileApiFileEntries.push({ key, value });
             console.log(`file: ${value.name}`);
           }
         }
+        this.FileApiFileEntries = this.FileApiFileEntries.sort((a, b) => {
+          if (a.key.toUpperCase() < b.key.toUpperCase()) {
+            return -1;
+          }
+          if (a.key.toUpperCase() > b.key.toUpperCase()) {
+            return 1;
+          }
+          return 0;
+        });
       } catch (err) {
         console.error(err);
         this.$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
       }
     },
     //
-    async loadFileBtn(iKey: string) {
+    async loadFileBtn(iFielname: string, iFileObject: any) {
       //file is loading in slices
-      console.log(`loadFileBtn()`, iKey);
+      console.log(`loadFileBtn()`, iFielname);
       if (this.FileData.BlobList.length > 0) {
-        if ((await this.confirmDialog(this.$t("QMemory"), this.$t("Yes"), this.$t("Cancel"))) != true) {
+        if ((await this.confirmDialog(this.$t("Confirm"), this.$t("QMemory"), this.$t("Yes"), this.$t("Cancel"))) != true) {
           //exit and return
           return;
         }
       }
       this.SpinnerOn = true;
       try {
-        let lFileHandler = await this.FileApiFileHandler.getFileHandle(iKey);
-        const file = await lFileHandler.getFile();
+        let file = undefined;
+        if (!iFileObject || !iFileObject.name) {
+          let lFileHandler = await this.FileApiFileHandler.getFileHandle(iFielname);
+          file = await lFileHandler.getFile();
+        } else {
+          file = iFileObject;
+          if (!iFielname) {
+            iFielname = iFileObject.name;
+          }
+        }
+
+        let lExtension = iFielname.split(".").pop();
+        if (lExtension != `${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`) {
+          this.$q.notify({
+            type: "warning",
+            message: `File Extension Warning: the expected extesion should be ${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}.`,
+            position: "center",
+            timeout: 5000,
+          });
+        }
+
+        if (!(file instanceof Blob)) {
+          throw new Error("file error - no blob type.");
+        }
+
         let lSize = file.size;
         this.clearBuffer();
         this.FileData.StartTime = Date.now();
@@ -659,9 +698,11 @@ export default defineComponent({
           this.FileData.EndTime = lRecorderTime;
           this.FileData.Size += lContenSize;
         }
-        this.FileData.Name = iKey.substring(0, iKey.indexOf(`.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`));
 
-        if (this.FileData.BlobList.length > 0 && this.recorderOptions.mimeType.includes("webm")) {
+        this.FileData.Name = iFielname.substring(0, iFielname.indexOf(`.${lExtension}`));
+        this.FileData.Extension = lExtension;
+
+        if (this.FileData.BlobList.length > 0 && this.FileData.Extension.includes("webm")) {
           //if webm then decode
           try {
             this.calculateDuration = true;
@@ -717,6 +758,13 @@ export default defineComponent({
       this.FileData.StartTime = undefined;
       this.FileData.EndTime = undefined;
       this.FileData.Size = 0;
+      this.FileData.Name = "test";
+      this.FileData.Extension = this.recorderOptions.mimeType.split(";")[0].split("/")[1];
+      this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
+      if (this.VideoElement) {
+        this.VideoElement.pause();
+        this.VideoElement.src = "";
+      }
     },
     //
     uuidv4(): string {
@@ -877,15 +925,20 @@ export default defineComponent({
         };
         //
         //        var url = window.URL.createObjectURL(this.FileData.BlobList[this.FileData.Position]);
-        let blob = new Blob(this.FileData.BlobList, { type: this.recorderOptions.mimeType });
+        let blob = new Blob(this.FileData.BlobList, { type: `video/${this.FileData.Extension}` }); //this.recorderOptions.mimeType });
         let url = window.URL.createObjectURL(blob);
         this.VideoElement.src = url;
         this.VideoElement.currentTime = this.FileData.Position;
         this.VideoElement.playbackRate = this.playbackRate;
         try {
+          this.PlayerWaiting = true;
           await this.VideoElement.play();
+          this.PlayerWaiting = false;
         } catch (e) {
           console.error(e);
+          this.$q.notify({ type: "negative", message: `${e.name}: ${e.message}`, position: "center", timeout: 5000 });
+          this.PlayerWaiting = false;
+          this.playOn = false;
         }
       }
     },
@@ -956,21 +1009,21 @@ export default defineComponent({
       return `${l_std}:${l_min}:${l_sec}`;
     },
     //
-    confirmDialog(iMessage: string, iYes: string, iNo: string) {
+    confirmDialog(iTitle: string, iMessage: string, iYes: string, iNo: string) {
       return new Promise((resolve) =>
         this.$q
           .dialog({
-            title: this.$t("Confirm"),
+            title: iTitle,
             message: iMessage,
             ok: {
               label: iYes,
               push: iYes != "",
-              class: "tw-bg-lime-300",
+              class: "tw-bg-lime-300 tw-text-black",
             },
             cancel: {
               label: iNo,
               push: iNo != "",
-              class: "tw-bg-red-300",
+              class: "tw-bg-red-300 tw-text-black",
             },
             persistent: true,
             class: "tw-font-sans",
@@ -978,6 +1031,16 @@ export default defineComponent({
           .onOk(() => resolve(true))
           .onCancel(() => resolve(false))
       );
+    },
+    LoadFileNative(iFile) {
+      console.log(`LoadFileNative(${iFile})`);
+      if (iFile && iFile[0]) {
+        this.loadFileBtn(`${iFile[0].name}`, iFile[0]);
+        //this.FileData.BlobList = [];
+        //this.FileData.BlobList.push(iFile[0]);
+        //this.FileData.Filename = iFile[0].name;
+        this.UploadOn = false;
+      }
     },
   },
 });
@@ -1081,15 +1144,19 @@ export default defineComponent({
           <br />
           <q-slider v-model="FileData.Position" :min="0" :max="FileData.Duration" label />
           <br />
-          <q-select
-            v-model="playbackRate"
-            :options="playbackRateOptions"
-            emit-value
-            map-options
-            :label="$t('PlaybackRate')"
-            style="width: 50%; max-width: 120px"
-            @update:model-value="changePlaybackRate"
-          />
+          <div class="row tw-gap-4">
+            <q-select
+              v-model="playbackRate"
+              :options="playbackRateOptions"
+              emit-value
+              map-options
+              :label="$t('PlaybackRate')"
+              style="width: 50%; max-width: 120px"
+              @update:model-value="changePlaybackRate"
+            />
+            <q-spinner-hourglass v-if="PlayerWaiting" color="primary" size="1em" />
+            <h7 v-if="PlayerWaiting" style="font-size: 10px">start playing ...</h7>
+          </div>
         </q-card-section>
         <q-separator />
 
@@ -1126,7 +1193,8 @@ export default defineComponent({
       <!-- recorder -->
       <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || FileData.Size > 0" style="max-width: 300px">
         <q-card-section>
-          <h7 class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7> <br />
+          <h7 v-if="selMode != 'player'" class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7>
+          <h7 v-if="selMode == 'player'" class="text-subtitle1">Data</h7> <br />
 
           <h7 class="text-body2">{{ `${$t("Size")} ${(FileData.Size / 1000000).toFixed(2)}` }} mByte </h7>
           <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
@@ -1141,6 +1209,7 @@ export default defineComponent({
           </div>
 
           <q-select
+            v-if="selMode != 'player'"
             v-model="recorderOptions.mimeType"
             :options="mimeTypeOptions"
             emit-value
@@ -1148,6 +1217,7 @@ export default defineComponent({
             :label="$t('Recorder_mimetype')"
             :disable="mimeTypeOptions.length == 0 || FileData.Size > 0 || RecorderState != 'inactive'"
           />
+          <q-input v-if="selMode == 'player'" v-model="FileData.Extension" :label="$t('Recorder_mimetype')" disable />
           <div v-if="selMode == 'capture' || selMode == 'camera'">
             <div class="row">
               <q-select
@@ -1218,6 +1288,18 @@ export default defineComponent({
             class="tw-bg-red-300"
           />
           <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="download" />
+          <q-btn
+            v-if="!FileApi"
+            label="upload"
+            icon="upload_file"
+            @click="
+              () => {
+                this.FileInput = '';
+                this.UploadOn = true;
+              }
+            "
+            :disable="RecorderState != 'inactive' || connectOn"
+          />
           <q-btn label="clear" @click="clearBuffer" :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="delete_forever" />
         </q-card-actions>
       </q-card>
@@ -1227,6 +1309,17 @@ export default defineComponent({
           <div class="row tw-justify-between">
             <h7 class="text-subtitle1"> Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</h7>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
+            <q-btn
+              label="native upload"
+              icon="upload_file"
+              @click="
+                () => {
+                  this.FileInput = '';
+                  this.UploadOn = true;
+                }
+              "
+              :disable="RecorderState != 'inactive' || connectOn"
+            />
           </div>
           <br />
 
@@ -1234,7 +1327,7 @@ export default defineComponent({
             <q-item :key="index" dense>
               <q-item-section>
                 <q-item-label>
-                  <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${item.key}`)" :disable="RecorderState != 'inactive' || connectOn" />
+                  <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${item.key}`, undefined)" :disable="RecorderState != 'inactive' || connectOn" />
                   {{ item.key }}
                 </q-item-label>
               </q-item-section>
@@ -1245,6 +1338,16 @@ export default defineComponent({
       </q-card>
       <q-dialog v-model="SpinnerOn" no-backdrop-dismiss persistent class="tw-font-sans">
         <div v-if="SpinnerOn" class="q-gutter-md justify-center"><q-spinner-hourglass color="light-green" size="xl" /></div>
+      </q-dialog>
+      <q-dialog v-model="UploadOn" persistent class="tw-font-sans">
+        <q-card>
+          <q-card-section>
+            <q-input v-model="FileInput" @update:model-value="LoadFileNative" type="file" />
+            <q-card-actions class="tw-justify-end">
+              <q-btn flat :label="$t('Cancel')" v-close-popup class="tw-bg-red-300" icon="close" />
+            </q-card-actions>
+          </q-card-section>
+        </q-card>
       </q-dialog>
     </div>
   </q-page>
