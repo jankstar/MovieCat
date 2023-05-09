@@ -3,7 +3,9 @@ import { defineComponent } from "vue";
 import AudioConstraints from "components/AudioConstraints.vue";
 import AudioSettingComp from "components/AudioSettingComp.vue";
 import VideoSettingComp from "components/VideoSettingComp.vue";
-import moviecat from "src/lib/moviecat.js";
+import PlayerComp from "components/PlayerComp.vue";
+
+import moviecat from "src/lib/moviecat";
 import * as ebml from "ts-ebml";
 import type { EBMLElementDetail } from "ts-ebml";
 
@@ -11,11 +13,12 @@ export default defineComponent({
   name: "IndexPage",
   props: ["langu"],
 
-  components: { AudioConstraints, AudioSettingComp, VideoSettingComp },
+  components: { AudioConstraints, AudioSettingComp, VideoSettingComp, PlayerComp },
 
   data: () => {
     return {
       $t: undefined,
+      moviecat: moviecat,
       //MediaDevices
       SpinnerOn: false,
       connectOn: false,
@@ -84,13 +87,7 @@ export default defineComponent({
       FileInput: undefined,
 
       VideoElement: undefined,
-      PlayerMuted: true,
-      PlayerWaiting: false,
       calculateDuration: false,
-      playOn: false,
-      playbackRate: 1,
-      playbackRateOptions: moviecat.ConstPlaybackRateOptions,
-      //OnOffOptions: [],
     };
   },
 
@@ -108,10 +105,6 @@ export default defineComponent({
   async mounted() {
     try {
       console.log(`IndexPage mounted`);
-      // this.OnOffOptions = [
-      //   { value: true, label: this.$t("On") },
-      //   { value: false, label: this.$t("Off") },
-      // ];
 
       this.getMediaDevices();
 
@@ -126,10 +119,6 @@ export default defineComponent({
 
   updated() {
     console.log(`IndexPage updated`);
-    // this.OnOffOptions = [
-    //   { value: true, label: this.$t("On") },
-    //   { value: false, label: this.$t("Off") },
-    // ];
   },
 
   methods: {
@@ -481,7 +470,7 @@ export default defineComponent({
       if (this.MainStream && this.MainStream.active) {
         this.stopRecorder();
         let tracks = this.MainStream.getTracks();
-        tracks.forEach((track) => track.stop());
+        tracks.forEach((track: any) => track.stop());
         this.MainStream = undefined;
         this.VideoSetting = undefined;
         this.AudioSetting = undefined;
@@ -510,9 +499,8 @@ export default defineComponent({
 
         this.LocalStopFunc = undefined;
         this.RecorderTimeOutID = setTimeout(function () {
-          that.LocalStopFunc = that.download;
+          that.LocalStopFunc = that.download; //download via event!
           that.stopRecorder();
-          //that.download();
           that.RecorderTimeOutID = undefined;
         }, 1000 * 60 * this.recorderAutoStop); //180 min = 3h
       }
@@ -556,7 +544,7 @@ export default defineComponent({
             this.$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
           }
         } else {
-          //standard download without file api
+          //native download without file api
           const blob = new Blob(this.FileData.BlobList, { type: this.recorderOptions.mimeType });
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -653,7 +641,7 @@ export default defineComponent({
         if (lExtension != `${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`) {
           this.$q.notify({
             type: "warning",
-            message: `File Extension Warning: the expected extesion should be ${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}.`,
+            message: `${this.$t("WarningFileExtension")} ${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}.`,
             position: "center",
             timeout: 5000,
           });
@@ -725,7 +713,7 @@ export default defineComponent({
                 });
                 reader.stop();
                 const sec = (reader.duration * reader.timecodeScale) / 1000 / 1000; // / 1000;
-                console.log(`duration ${that.computeTime(sec)}`);
+                console.log(`duration ${moviecat.computeTime(sec)}`);
                 if (that.FileData.StartTime == undefined) {
                   that.FileData.StartTime = 0;
                 }
@@ -872,143 +860,7 @@ export default defineComponent({
 
       draw();
     },
-    //
-    async playOnBtn() {
-      console.log(`playOnBtn()`);
-      let that = this;
 
-      this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (this.playOn == false && this.VideoElement && this.FileData.BlobList && this.FileData.BlobList.length > 0 && this.recorderOptions.mimeType) {
-        this.VideoElement.pause(); //player stoppen
-        //
-        this.VideoElement.onloadedmetadata = () => {
-          console.log("onloadedmetadata()");
-          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.FileData.Duration;
-          if (sec && that.FileData.Duration < sec) {
-            that.FileData.Duration = sec;
-            if (that.FileData.StartTime == undefined) {
-              that.FileData.StartTime = 0;
-            }
-            that.FileData.EndTime = that.FileData.StartTime + Math.trunc(that.FileData.Duration * 1000);
-          }
-          console.log("Duration change", that.FileData.Duration);
-        };
-        this.VideoElement.ondurationchange = () => {
-          console.log("ondurationchange()");
-          let sec = Number.isFinite(that.VideoElement.duration) ? Math.trunc(that.VideoElement.duration) : that.FileData.Duration;
-          if (sec && that.FileData.Duration < sec) {
-            that.FileData.Duration = sec;
-            if (that.FileData.StartTime == undefined) {
-              that.FileData.StartTime = 0;
-            }
-            that.FileData.EndTime = that.FileData.StartTime + Math.trunc(that.FileData.Duration * 1000);
-          }
-          console.log("Duration change", that.FileData.Duration);
-        };
-        this.VideoElement.ontimeupdate = () => {
-          console.log(`currentTime ${that.VideoElement.currentTime.toFixed(2)} sec`);
-          that.FileData.Position =
-            that.VideoElement.currentTime && Number.isFinite(that.VideoElement.currentTime) ? Math.trunc(that.VideoElement.currentTime) : that.FileData.Position;
-          if (that.FileData.Position && that.FileData.Duration < that.FileData.Position) {
-            that.FileData.Duration = that.FileData.Position + 1;
-            if (that.FileData.StartTime == undefined) {
-              that.FileData.StartTime = 0;
-            }
-            that.FileData.EndTime = that.FileData.StartTime + Math.trunc(that.FileData.Duration * 1000);
-          }
-        };
-        this.VideoElement.onended = () => {
-          that.playOn = false;
-        };
-        this.VideoElement.onplay = () => {
-          that.playOn = true;
-        };
-        //
-        //        var url = window.URL.createObjectURL(this.FileData.BlobList[this.FileData.Position]);
-        let blob = new Blob(this.FileData.BlobList, { type: `video/${this.FileData.Extension}` }); //this.recorderOptions.mimeType });
-        let url = window.URL.createObjectURL(blob);
-        this.VideoElement.src = url;
-        this.VideoElement.currentTime = this.FileData.Position;
-        this.VideoElement.playbackRate = this.playbackRate;
-        try {
-          this.PlayerWaiting = true;
-          await this.VideoElement.play();
-          this.PlayerWaiting = false;
-        } catch (e) {
-          console.error(e);
-          this.$q.notify({ type: "negative", message: `${e.name}: ${e.message}`, position: "center", timeout: 5000 });
-          this.PlayerWaiting = false;
-          this.playOn = false;
-        }
-      }
-    },
-    playOffBtn() {
-      console.log(`playOffBtn()`);
-      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (myVideoTag) {
-        myVideoTag.pause(); //player stoppen
-      }
-      this.playOn = false;
-    },
-    muteOnBtn() {
-      console.log(`muteOnBtn()`);
-      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (myVideoTag) {
-        this.PlayerMuted = true;
-        myVideoTag.muted = true;
-      }
-    },
-    muteOffBtn() {
-      console.log(`muteOffBtn()`);
-      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (myVideoTag) {
-        this.PlayerMuted = false;
-        myVideoTag.muted = false;
-      }
-    },
-    async changePosBtn(iSec) {
-      console.log(`muteOffBtn(${iSec})`);
-      if (iSec < 0) {
-        this.FileData.Position = 0;
-      } else if (iSec > this.FileData.Duration) {
-        this.FileData.Position = this.FileData.Duration;
-      } else {
-        this.FileData.Position = iSec;
-      }
-
-      if (this.playOn) {
-        this.VideoElement = <HTMLVideoElement>document.getElementById("id_video_player");
-        if (this.VideoElement) {
-          this.VideoElement.pause();
-          this.VideoElement.currentTime = this.FileData.Position;
-          try {
-            await this.VideoElement.play();
-          } catch (e) {
-            console.error(e);
-          }
-        }
-      }
-    },
-    changePlaybackRate(value: any) {
-      console.log(`muteOffBtn()`);
-      let myVideoTag = <HTMLVideoElement>document.getElementById("id_video_player");
-      if (myVideoTag) {
-        myVideoTag.playbackRate = value;
-      }
-    },
-    //
-    computeTime(iDuration: number): string {
-      let l_time = Math.trunc(iDuration);
-      let l_sec = (l_time % 60).toFixed(0);
-      l_sec = l_sec.length > 1 ? l_sec : `0${l_sec}`;
-      l_time = Math.trunc(iDuration / 60);
-      let l_min = (l_time % 60).toFixed(0);
-      l_min = l_min.length > 1 ? l_min : `0${l_min}`;
-      let l_std = (l_time / 60).toFixed(0);
-      l_std = l_std.length > 1 ? l_std : `0${l_std}`;
-      return `${l_std}:${l_min}:${l_sec}`;
-    },
-    //
     confirmDialog(iTitle: string, iMessage: string, iYes: string, iNo: string) {
       return new Promise((resolve) =>
         this.$q
@@ -1032,8 +884,8 @@ export default defineComponent({
           .onCancel(() => resolve(false))
       );
     },
-    LoadFileNative(iFile) {
-      console.log(`LoadFileNative(${iFile})`);
+    LoadFileNative(iFile: any) {
+      console.log(`LoadFileNative(${iFile[0].name})`);
       if (iFile && iFile[0]) {
         this.loadFileBtn(`${iFile[0].name}`, iFile[0]);
         //this.FileData.BlobList = [];
@@ -1134,61 +986,7 @@ export default defineComponent({
       </q-card>
 
       <!-- play video from file/recorder -->
-      <q-card v-if="!connectOn && selMode == 'player'" style="min-width: 300px; max-width: 60%" class="tw-grow">
-        <q-card-section>
-          <h7 class="text-subtitle1">Video Player </h7><br />
-          <video id="id_video_player" playsinline muted style="background-color: black"></video>
-        </q-card-section>
-        <q-card-section>
-          <h7 v-if="FileData.StartTime != FileData.EndTime" class="text-body2">{{ $t("Time") }}: {{ computeTime(FileData.Position) }}</h7>
-          <br />
-          <q-slider v-model="FileData.Position" :min="0" :max="FileData.Duration" label />
-          <br />
-          <div class="row tw-gap-4">
-            <q-select
-              v-model="playbackRate"
-              :options="playbackRateOptions"
-              emit-value
-              map-options
-              :label="$t('PlaybackRate')"
-              style="width: 50%; max-width: 120px"
-              @update:model-value="changePlaybackRate"
-            />
-            <q-spinner-hourglass v-if="PlayerWaiting" color="primary" size="1em" />
-            <h7 v-if="PlayerWaiting" style="font-size: 10px">start playing ...</h7>
-          </div>
-        </q-card-section>
-        <q-separator />
-
-        <q-card-actions class="tw-grid tw-grid-rows-2 tw-gap-4 tw-justify-center">
-          <div>
-            <q-btn icon="skip_previous" @click="changePosBtn(0)"
-              ><q-tooltip>{{ $t("Start") }}</q-tooltip></q-btn
-            >
-            <q-btn icon="replay_10" @click="changePosBtn(FileData.Position - 10)"
-              ><q-tooltip>{{ $t("10_sec_replay") }}</q-tooltip></q-btn
-            >
-            <q-btn
-              :label="!playOn ? $t('Play') : $t('Stop')"
-              @click="!playOn ? playOnBtn() : playOffBtn()"
-              :icon="!playOn ? 'play_circle' : 'stop_circle'"
-              :class="!playOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
-              :disable="!FileData.BlobList || FileData.BlobList.length == 0"
-            />
-            <q-btn icon="forward_10" @click="changePosBtn(FileData.Position + 10)"
-              ><q-tooltip>{{ $t("10_sec_forward") }}</q-tooltip></q-btn
-            >
-            <q-btn icon="skip_next" @click="changePosBtn(FileData.Duration)"
-              ><q-tooltip>{{ $t("End") }}</q-tooltip></q-btn
-            >
-          </div>
-          <!-- -->
-          <div>
-            <q-btn @click="$q.fullscreen.toggle(VideoElement)" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" />
-            <q-btn :label="!PlayerMuted ? $t('Mute') : $t('Mute_off')" @click="!PlayerMuted ? muteOnBtn() : muteOffBtn()" :icon="!PlayerMuted ? 'volume_up' : 'volume_off'" />
-          </div>
-        </q-card-actions>
-      </q-card>
+      <PlayerComp v-if="!connectOn && selMode == 'player'" :langu="langu" v-model="FileData" :connectOn="connectOn" :selMode="selMode" />
 
       <!-- recorder -->
       <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || FileData.Size > 0" style="max-width: 300px">
@@ -1202,7 +1000,11 @@ export default defineComponent({
           <div class="row">
             <h7 class="text-body2"
               >{{ $t("Time") }}:
-              {{ FileData.StartTime && FileData.EndTime ? computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter) : computeTime(RecorderCounter) }}
+              {{
+                FileData.StartTime && FileData.EndTime
+                  ? moviecat.computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter)
+                  : moviecat.computeTime(RecorderCounter)
+              }}
             </h7>
             <q-spinner-hourglass v-if="calculateDuration" color="primary" size="1em" />
             <h7 v-if="calculateDuration" style="font-size: 10px">calculate duration</h7>
@@ -1305,7 +1107,7 @@ export default defineComponent({
       </q-card>
 
       <q-card v-if="FileApi" class="" style="width: 600px">
-        <q-card-section v-if="FileApi">
+        <q-card-section>
           <div class="row tw-justify-between">
             <h7 class="text-subtitle1"> Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</h7>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
@@ -1334,11 +1136,12 @@ export default defineComponent({
             </q-item>
           </q-virtual-scroll>
         </q-card-section>
-        <q-separator v-if="FileApi" />
       </q-card>
+
       <q-dialog v-model="SpinnerOn" no-backdrop-dismiss persistent class="tw-font-sans">
         <div v-if="SpinnerOn" class="q-gutter-md justify-center"><q-spinner-hourglass color="light-green" size="xl" /></div>
       </q-dialog>
+
       <q-dialog v-model="UploadOn" persistent class="tw-font-sans">
         <q-card>
           <q-card-section>

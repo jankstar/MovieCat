@@ -1,3 +1,7 @@
+# MovieCat 0.2.6
+
+- player as component
+
 # MovieCat 0.2.5
 
 - flex grid for player

@@ -57,6 +57,7 @@ export default {
     "InfoAudioOffVideoOff": "audio and video off - no media stream",
     "InfoMin1": "The minimum is 1 min",
     "InfoMax180": "The maximum is 180 min",
+    "WarningFileExtension": "File Extension Warning: the expected extesion should be",
 
     "QMemory": "There is data in memory - delete?",
   },
@@ -119,6 +120,8 @@ export default {
     "InfoRefreshPerSlices": "refresh per Block",
     "InfoNoMediaStream": "kein Media-Stream",
     "InfoAudioOffVideoOff": "Audio und Video aus - kein Media-Stream",
+    "WarningFileExtension": "Dateierweiterung Warnung: die erwartete Dateierweiterung sollte sein",
+
 
     "QMemory": "Es gibt Daten im Speicher - löschen?",
   }

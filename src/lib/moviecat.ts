@@ -48,6 +48,19 @@ const ConstTrueMimeType = [
   { value: "video/mpeg", label: "mpeg" },
 ];
 
+
+function computeTime(iDuration: number): string {
+  let l_time = Math.trunc(iDuration);
+  let l_sec = (l_time % 60).toFixed(0);
+  l_sec = l_sec.length > 1 ? l_sec : `0${l_sec}`;
+  l_time = Math.trunc(iDuration / 60);
+  let l_min = (l_time % 60).toFixed(0);
+  l_min = l_min.length > 1 ? l_min : `0${l_min}`;
+  let l_std = (l_time / 60).toFixed(0);
+  l_std = l_std.length > 1 ? l_std : `0${l_std}`;
+  return `${l_std}:${l_min}:${l_sec}`;
+}
+
 export default {
 
   ConstAudioBPSOptions,
@@ -59,4 +72,6 @@ export default {
   ConstPlaybackRateOptions,
 
   ConstTrueMimeType,
+
+  computeTime,
 }
