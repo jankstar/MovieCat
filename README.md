@@ -10,16 +10,6 @@ or clone it<br/>
 
 <br/>
 
-# Server
-
-The application uses a server in go (gin-gonic), but node.js or any other can also be used.
-The go server works locally with generated certificates that have to be created in the /key directory. For testing, I generated the certificates on my local IP address, so that the server can start at another IP address without HTTPS and thus use HTTPS when deploying to Azure via the proxy there.
-If golang is deployed to the Azure Cloud, version 1.17 must be used.
-
-Of course, node.js can also be used.
-
-Please note: the application must either use HTTPS or `localhost`, which is a prerequisite for every PWA application.
-
 # App
 
 It is a PWA app developed in Quasar and Vue with Tailwindcss.
@@ -52,6 +42,16 @@ For WebM, the file is decoded and the metadata, e.g. duration, is determined. Th
 ## Supported codec
 
 The supported codec depends on the browser - Chrome in version 113, for example, only supports WebM as a container and VP8, VP9 or H.264 for video encoding. The media player, however, can play mp4. For this reason, only files with the WebM extension are selected in the file api. The button for native upload also loads any other file. For ts (mpeg), for example, only the sound is decoded and played on. So if you need a player, you should use VLC.
+
+# Server
+
+The application uses a server in go (gin-gonic), but node.js or any other can also be used.
+The go server works locally with generated certificates that have to be created in the /key directory. For testing, I generated the certificates on my local IP address, so that the server can start at another IP address without HTTPS and thus use HTTPS when deploying to Azure via the proxy there.
+If golang is deployed to the Azure Cloud, version 1.17 must be used.
+
+Of course, node.js can also be used.
+
+Please note: the application must either use HTTPS or `localhost`, which is a prerequisite for every PWA application.
 
 # Build
 
