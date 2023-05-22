@@ -14,6 +14,7 @@ export default defineComponent({
     return {
       FileData: {
         Name: "test",
+        Extension: "",
         StartTime: undefined,
         EndTime: undefined,
         Size: 0,
