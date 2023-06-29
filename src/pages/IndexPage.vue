@@ -922,7 +922,8 @@ export default defineComponent({
         <q-separator v-if="selMode == 'capture' || selMode == 'camera'" />
         <q-card-section v-if="selMode != 'player'">
           <div v-if="selMode == 'capture' || selMode == 'camera'">
-            <h7 class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</h7> <br />
+            <h6 class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</h6>
+            <br />
           </div>
           <q-select v-if="selMode == 'camera'" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="connectOn" />
           <q-select
@@ -970,7 +971,7 @@ export default defineComponent({
       <!-- input audio / Video-->
       <q-card v-if="selMode == 'capture' || selMode == 'camera'" style="max-width: 300px">
         <q-card-section>
-          <h7 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }}) </h7>
+          <h6 class="text-subtitle1">Audio ({{ AudioSetting && !AudioSetting.muted ? $t("On") : $t("Off") }})</h6>
 
           <div class="peer" id="peer-audio">
             <div class="stat-value">
@@ -980,7 +981,8 @@ export default defineComponent({
           </div>
         </q-card-section>
         <q-card-section>
-          <h7 class="text-subtitle1">Video ({{ VideoSetting && VideoSetting.enabled ? $t("On") : $t("Off") }})</h7> <br />
+          <h6 class="text-subtitle1">Video ({{ VideoSetting && VideoSetting.enabled ? $t("On") : $t("Off") }})</h6>
+          <br />
           <video id="id_video" playsinline autoplay muted style="background-color: black"></video>
         </q-card-section>
       </q-card>
@@ -991,23 +993,24 @@ export default defineComponent({
       <!-- recorder -->
       <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || FileData.Size > 0" style="max-width: 300px">
         <q-card-section>
-          <h7 v-if="selMode != 'player'" class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h7>
-          <h7 v-if="selMode == 'player'" class="text-subtitle1">Data</h7> <br />
+          <h6 v-if="selMode != 'player'" class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</h6>
+          <h6 v-if="selMode == 'player'" class="text-subtitle1">Data</h6>
+          <br />
 
-          <h7 class="text-body2">{{ `${$t("Size")} ${(FileData.Size / 1000000).toFixed(2)}` }} mByte </h7>
-          <h7 style="font-size: 10px"> ({{ $t("InfoRefreshPerSlices") }})</h7>
+          <h6 class="text-body2">{{ `${$t("Size")} ${(FileData.Size / 1000000).toFixed(2)}` }} mByte</h6>
+          <h6 style="font-size: 10px">({{ $t("InfoRefreshPerSlices") }})</h6>
           <br />
           <div class="row">
-            <h7 class="text-body2"
-              >{{ $t("Time") }}:
+            <h6 class="text-body2">
+              {{ $t("Time") }}:
               {{
                 FileData.StartTime && FileData.EndTime
                   ? moviecat.computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter)
                   : moviecat.computeTime(RecorderCounter)
               }}
-            </h7>
+            </h6>
             <q-spinner-hourglass v-if="calculateDuration" color="primary" size="1em" />
-            <h7 v-if="calculateDuration" style="font-size: 10px">calculate duration</h7>
+            <h6 v-if="calculateDuration" style="font-size: 10px">calculate duration</h6>
           </div>
 
           <q-select
@@ -1109,7 +1112,7 @@ export default defineComponent({
       <q-card v-if="FileApi" class="" style="width: 600px">
         <q-card-section>
           <div class="row tw-justify-between">
-            <h7 class="text-subtitle1"> Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</h7>
+            <h6 class="text-subtitle1">Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</h6>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
             <q-btn
               label="native upload"

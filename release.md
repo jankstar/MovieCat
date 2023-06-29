@@ -1,3 +1,8 @@
+# MovieCat 0.2.7
+
+- update npm li
+- fix h7 references
+
 # MovieCat 0.2.6
 
 - player as component

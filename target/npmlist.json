@@ -1,1 +1,0 @@
-{"version":"0.2.1","name":"moviecat","dependencies":{"@quasar/babel-preset-app":{"version":"2.0.2"},"@quasar/extras":{"version":"1.16.2"},"eslint-plugin-typescript":{"version":"0.14.0"},"quasar":{"version":"2.11.10"},"vue-i18n":{"version":"9.2.2"},"vue-router":{"version":"4.1.6"},"vue":{"version":"3.2.47"}}}

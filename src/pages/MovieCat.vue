@@ -38,21 +38,21 @@ export default defineComponent({
       <q-card>
         <q-card-section>
           <h5><b>MovieCat</b></h5>
-          <h7 v-if="langu == 'de-DE'">
+          <h6 v-if="langu == 'de-DE'">
             <br />
             Version: {{ version }} <br />
             Beschreibung: <br />
             Aufzeichnung eines Films von einer Kamera oder Bildschirm und sichern als Datei.
             <br />
-          </h7>
-          <h7 v-else>
+          </h6>
+          <h6 v-else>
             <br />
             Version: {{ version }}<br />
             Description: <br />
             Record a movie from a camera or screen and save it as a file.
             <br />
-          </h7>
-          <h7>
+          </h6>
+          <h6>
             <br />
             <a href="https://quasar.dev">Quasar: {{ $q.version }} </a><br />
             <a href="https://https://vitejs.dev">Vite: 2.9.15</a><br />
@@ -60,18 +60,19 @@ export default defineComponent({
             <a href="https://github.com/webrtcHacks/adapter">adapter.js: 8.0.0</a><br />
             Platform: {{ $q.platform.is.platform }} <br />
             Browser target: es2019, edge88, firefox78, chrome87, safari13.1<br />
-          </h7>
-          <h7>
+          </h6>
+          <h6>
             <br />
             Icons: material-icons <br />
             fontFamily: ChakraPetch, Merriweather<br />
             This Font Software is licensed under the SIL Open Font License, Version 1.1. <br />
-            <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a><br /> </h7
-          ><br />
+            <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a><br />
+          </h6>
+          <br />
 
-          <h7>Dependencies</h7>
-          <h7 v-for="item in dependenciesList" v-bind:key="item"><br />{{ item }}</h7
-          ><br /><br />
+          <h6>Dependencies</h6>
+          <h6 v-for="item in dependenciesList" v-bind:key="item"><br />{{ item }}</h6>
+          <br /><br />
           GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a><br />
           <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c) 2023 jankstar</a><br />
         </q-card-section>

@@ -23,7 +23,7 @@ export default defineComponent({
       <!-- capture -->
       <q-card>
         <q-card-section>
-          <h7 v-if="langu == 'de-DE'">
+          <h6 v-if="langu == 'de-DE'">
             <h5><b>Datenschutz</b></h5>
 
             <br />
@@ -34,8 +34,8 @@ export default defineComponent({
             B) Lokalestore <br />
             Folgende technische Daten werden im localstore gespeichert und dienen der Voreinstellung: Modus, Audio-Bits per Secunde, video Bits Per Sekunde, mime Type, recorder
             Slices, recorder Auto Stop Time, Sprache, dark-flag.
-          </h7>
-          <h7 v-else>
+          </h6>
+          <h6 v-else>
             <h5><b>Privacy Policy</b></h5>
 
             <br />
@@ -46,7 +46,7 @@ export default defineComponent({
             B) Localstore <br />
             The following technical data are stored in the localstore and serve as default settings: mode, audio bits per second, video bits per second, mime type, recorder slices,
             recorder auto stop time, language, dark-flag.
-          </h7>
+          </h6>
         </q-card-section>
         <q-separator />
 
