@@ -49,8 +49,7 @@ export default defineComponent({
 <template>
   <div>
     <q-card-section style="width: 300px">
-      <h6 class="text-subtitle1">Audio</h6>
-      <br />
+      <div class="text-subtitle1">Audio</div>
       <div class="row">
         <q-select
           v-if="SupportedConstraints.sampleRate"

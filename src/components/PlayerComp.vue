@@ -182,15 +182,12 @@ export default defineComponent({
   <!-- play video from file/recorder -->
   <q-card style="min-width: 300px; max-width: 60%" class="tw-grow">
     <q-card-section>
-      <h6 class="text-subtitle1">Video Player</h6>
-      <br />
+      <div class="text-subtitle1">Video Player</div>
       <video id="id_video_player" playsinline muted style="background-color: black"></video>
     </q-card-section>
     <q-card-section>
-      <h6 v-if="FileData.StartTime != FileData.EndTime" class="text-body2">{{ $t("Time") }}: {{ moviecat.computeTime(FileData.Position) }}</h6>
-      <br />
+      <div v-if="FileData.StartTime != FileData.EndTime" class="text-body2">{{ $t("Time") }}: {{ moviecat.computeTime(FileData.Position) }}</div>
       <q-slider v-model="FileData.Position" :min="0" :max="FileData.Duration" label />
-      <br />
       <div class="row tw-gap-4">
         <q-select
           v-model="playbackRate"
@@ -202,7 +199,7 @@ export default defineComponent({
           @update:model-value="changePlaybackRate"
         />
         <q-spinner-hourglass v-if="PlayerWaiting" color="primary" size="1em" />
-        <h6 v-if="PlayerWaiting" style="font-size: 10px">start playing ...</h6>
+        <div v-if="PlayerWaiting" style="font-size: 10px">start playing ...</div>
       </div>
     </q-card-section>
     <q-separator />

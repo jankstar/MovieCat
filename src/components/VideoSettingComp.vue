@@ -91,29 +91,27 @@ export default defineComponent({
   <div>
     <q-card-section>
       <div class="row tw-justify-between">
-        <h6 class="text-subtitle1">Video</h6>
+        <div class="text-subtitle1">Video</div>
         <q-separator />
         <q-btn flat round sizes="sx" padding="none" icon="edit" @click="VideoSettingBtn" />
       </div>
-      <h6 class="text-body2">{{ $t("Resolution") }}: {{ Setting ? `${Setting.width}x${Setting.height}` : "0x0" }}</h6>
-      <br />
-      <h6 v-if="SupportedConstraints.frameRate" class="text-body2">{{ $t("Frame_rate") }}: {{ Setting ? Setting.frameRate.toFixed(2) : "0" }}</h6>
-      <br />
+      <div class="text-body2">{{ $t("Resolution") }}: {{ Setting ? `${Setting.width}x${Setting.height}` : "0x0" }}</div>
+      <div v-if="SupportedConstraints.frameRate" class="text-body2">{{ $t("Frame_rate") }}: {{ Setting ? Setting.frameRate.toFixed(2) : "0" }}</div>
     </q-card-section>
     <q-separator />
   </div>
   <!-- Dialog VideoSettingDialog  -->
   <q-dialog v-model="VideoSettingDialog" no-backdrop-dismiss persistent class="tw-font-sans">
-    <q-card style="width: 400px; height: 420px">
+    <q-card style="width: 400px; height: 400px">
       <q-card-section>
         <div class="text-h6">Video Settings</div>
         <q-select v-model="VideoSettingNew.enabled" :options="OnOffOptions" emit-value map-options :label="$t('VideoEnabled')" style="width: 45%" />
         <br />
-        <h6 v-if="SupportedConstraints.width" class="text-body2">{{ $t("Resolution") }}: {{ VideoSettingNew ? `${VideoSettingNew.width}x${VideoSettingNew.height}` : "0x0" }}</h6>
-        <br />
-        <br />
-        <h6 v-if="SupportedConstraints.width" class="text-body2">{{ $t("Width") }}: {{ VideoSettingNew ? VideoSettingNew.width : "0" }}</h6>
-        <br />
+
+        <div v-if="SupportedConstraints.width" class="text-body2">{{ $t("Resolution") }}: {{ VideoSettingNew ? `${VideoSettingNew.width}x${VideoSettingNew.height}` : "0x0" }}</div>
+        <br v-if="SupportedConstraints.width" />
+
+        <div v-if="SupportedConstraints.width" class="text-body2">{{ $t("Width") }}: {{ VideoSettingNew ? VideoSettingNew.width : "0" }}</div>
         <q-slider
           v-if="SupportedConstraints.width"
           v-model="VideoSettingNew.width"
@@ -122,9 +120,7 @@ export default defineComponent({
           label
           style="width: 80%"
         />
-        <br />
-        <h6 v-if="SupportedConstraints.height" class="text-body2">{{ $t("Height") }}: {{ VideoSettingNew ? VideoSettingNew.height : "0" }}</h6>
-        <br />
+        <div v-if="SupportedConstraints.height" class="text-body2">{{ $t("Height") }}: {{ VideoSettingNew ? VideoSettingNew.height : "0" }}</div>
         <q-slider
           v-if="SupportedConstraints.height"
           v-model="VideoSettingNew.height"
@@ -133,9 +129,7 @@ export default defineComponent({
           label
           style="width: 80%"
         />
-        <br />
-        <h6 class="text-body2">{{ $t("SampleRate") }}: {{ VideoSettingNew ? VideoSettingNew.frameRate.toFixed(0) : "0" }}</h6>
-        <br />
+        <div class="text-body2">{{ $t("SampleRate") }}: {{ VideoSettingNew ? VideoSettingNew.frameRate.toFixed(0) : "0" }}</div>
         <q-slider
           v-if="SupportedConstraints.frameRate"
           v-model="VideoSettingNew.frameRate"

@@ -89,30 +89,27 @@ export default defineComponent({
   <div>
     <q-card-section>
       <div class="row tw-justify-between">
-        <h6 class="text-subtitle1">Audio</h6>
+        <div class="text-subtitle1">Audio</div>
         <q-separator />
         <q-btn flat round sizes="sx" padding="none" icon="edit" @click="AudioSettingBtn" />
       </div>
-      <h6 class="text-body2">{{ $t("AudioMuted") }}: {{ Setting && Setting.muted == false ? $t("Off") : $t("On") }}</h6>
-      <br />
-      <h6 v-if="SupportedConstraints.autoGainControl" class="text-body2">{{ $t("AutoGainControl") }}: {{ Setting && Setting.autoGainControl == false ? $t("Off") : $t("On") }}</h6>
-      <br />
-      <h6 v-if="SupportedConstraints.noiseSuppression" class="text-body2">
+      <div class="text-body2">{{ $t("AudioMuted") }}: {{ Setting && Setting.muted == false ? $t("Off") : $t("On") }}</div>
+      <div v-if="SupportedConstraints.autoGainControl" class="text-body2">
+        {{ $t("AutoGainControl") }}: {{ Setting && Setting.autoGainControl == false ? $t("Off") : $t("On") }}
+      </div>
+      <div v-if="SupportedConstraints.noiseSuppression" class="text-body2">
         {{ $t("NoiseSuppression") }}: {{ Setting && Setting.noiseSuppression == false ? $t("Off") : $t("On") }}
-      </h6>
-      <br />
-      <h6 v-if="SupportedConstraints.echoCancellation" class="text-body2">
+      </div>
+      <div v-if="SupportedConstraints.echoCancellation" class="text-body2">
         {{ $t("EchoCancellation") }}: {{ Setting && Setting.echoCancellation == false ? $t("Off") : $t("On") }}
-      </h6>
-      <br />
-      <h6 v-if="SupportedConstraints.sampleRate" class="text-body2">{{ $t("SampleRate") }}: {{ Setting ? (Setting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</h6>
-      <br />
+      </div>
+      <div v-if="SupportedConstraints.sampleRate" class="text-body2">{{ $t("SampleRate") }}: {{ Setting ? (Setting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</div>
     </q-card-section>
     <q-separator />
   </div>
   <!-- Dialog AudioSettingDialog -->
   <q-dialog v-model="AudioSettingDialog" no-backdrop-dismiss persistent class="tw-font-sans">
-    <q-card style="width: 400px; height: 320px">
+    <q-card style="width: 400px; height: 330px">
       <q-card-section>
         <div class="text-h6">Audio Settings</div>
         <div class="row">
@@ -146,9 +143,9 @@ export default defineComponent({
           />
         </div>
         <br />
-        <h6 v-if="SupportedConstraints.sampleRate" class="text-body2">
+        <div v-if="SupportedConstraints.sampleRate" class="text-body2">
           {{ $t("SampleRate") }}: {{ AudioSettingNew ? (AudioSettingNew.sampleRate / 1000).toFixed(0) : "0" }} kB/sec
-        </h6>
+        </div>
         <br />
         <q-slider
           v-if="SupportedConstraints.sampleRate"

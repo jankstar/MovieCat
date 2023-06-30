@@ -38,21 +38,21 @@ export default defineComponent({
       <q-card>
         <q-card-section>
           <h5><b>MovieCat</b></h5>
-          <h6 v-if="langu == 'de-DE'">
+          <div v-if="langu == 'de-DE'">
             <br />
             Version: {{ version }} <br />
             Beschreibung: <br />
             Aufzeichnung eines Films von einer Kamera oder Bildschirm und sichern als Datei.
             <br />
-          </h6>
-          <h6 v-else>
+          </div>
+          <div v-else>
             <br />
             Version: {{ version }}<br />
             Description: <br />
             Record a movie from a camera or screen and save it as a file.
             <br />
-          </h6>
-          <h6>
+          </div>
+          <div>
             <br />
             <a href="https://quasar.dev">Quasar: {{ $q.version }} </a><br />
             <a href="https://https://vitejs.dev">Vite: 2.9.15</a><br />
@@ -60,18 +60,18 @@ export default defineComponent({
             <a href="https://github.com/webrtcHacks/adapter">adapter.js: 8.0.0</a><br />
             Platform: {{ $q.platform.is.platform }} <br />
             Browser target: es2019, edge88, firefox78, chrome87, safari13.1<br />
-          </h6>
-          <h6>
+          </div>
+          <div>
             <br />
             Icons: material-icons <br />
             fontFamily: ChakraPetch, Merriweather<br />
             This Font Software is licensed under the SIL Open Font License, Version 1.1. <br />
             <a href="https://fonts.google.com/" target="_blank" class="text-overline">fonts.google.com</a><br />
-          </h6>
+          </div>
           <br />
 
-          <h6>Dependencies</h6>
-          <h6 v-for="item in dependenciesList" v-bind:key="item"><br />{{ item }}</h6>
+          <div>Dependencies</div>
+          <div v-for="item in dependenciesList" v-bind:key="item">{{ item }}</div>
           <br /><br />
           GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a><br />
           <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c) 2023 jankstar</a><br />
