@@ -37,7 +37,7 @@ export default defineComponent({
 
       AudioDraw: false,
       CaptureAndMic: false,
-      AudioConstraints: {
+      AudioConstraintsData: {
         deviceId: "default",
         autoGainControl: false,
         echoCancellation: false,
@@ -291,7 +291,7 @@ export default defineComponent({
         if (this.audioInputValue == "off") {
           configuration.audio = false;
         } else {
-          configuration.audio = this.AudioConstraints;
+          configuration.audio = this.AudioConstraintsData;
           configuration.audio.deviceId = this.audioInputValue;
         }
 
@@ -904,65 +904,38 @@ export default defineComponent({
       <!-- input and mode -->
       <q-card style="max-width: 300px">
         <q-card-section>
-          <q-select
-            v-model="selMode"
-            :options="[
-              { label: $t('Capture'), value: 'capture' },
-              { label: $t('Camera'), value: 'camera' },
-              { label: $t('Player'), value: 'player' },
-            ]"
-            emit-value
-            map-options
-            :label="$t('Mode')"
-            :disable="connectOn"
-            @update:model-value="saveRecorderData"
-          />
+          <q-select v-model="selMode" :options="[
+            { label: $t('Capture'), value: 'capture' },
+            { label: $t('Camera'), value: 'camera' },
+            { label: $t('Player'), value: 'player' },
+          ]" emit-value map-options :label="$t('Mode')" :disable="connectOn"
+            @update:model-value="saveRecorderData" />
         </q-card-section>
         <q-separator v-if="selMode == 'capture' || selMode == 'camera'" />
         <q-card-section v-if="selMode != 'player'">
           <div v-if="selMode == 'capture' || selMode == 'camera'">
             <div class="text-subtitle1">{{ $t("Input_state") }} {{ connectOn ? $t("On") : $t("Off") }}</div>
           </div>
-          <q-select v-if="selMode == 'camera'" v-model="videoInputValue" :options="videoInput" emit-value map-options :label="$t('Video_Input')" :disable="connectOn" />
-          <q-select
-            v-if="selMode == 'camera' || selMode == 'capture'"
-            v-model="audioInputValue"
-            :options="audioInput"
-            emit-value
-            map-options
-            :label="$t('Audio_Input')"
-            :disable="connectOn"
-          />
+          <q-select v-if="selMode == 'camera'" v-model="videoInputValue" :options="videoInput" emit-value map-options
+            :label="$t('Video_Input')" :disable="connectOn" />
+          <q-select v-if="selMode == 'camera' || selMode == 'capture'" v-model="audioInputValue" :options="audioInput"
+            emit-value map-options :label="$t('Audio_Input')" :disable="connectOn" />
         </q-card-section>
         <q-separator v-if="selMode != 'player'" />
 
-        <AudioConstraints v-if="selMode != 'player' && !connectOn" v-model="AudioConstraints" :langu="langu" :SupportedConstraints="SupportedConstraints" />
+        <AudioConstraints v-if="selMode != 'player' && !connectOn" v-model="AudioConstraintsData" :langu="langu"
+          :SupportedConstraints="SupportedConstraints" />
 
-        <AudioSettingComp
-          v-if="AudioSetting && connectOn"
-          v-model="AudioSetting"
-          :langu="langu"
-          :selMode="selMode"
-          :MainStream="MainStream"
-          :SupportedConstraints="SupportedConstraints"
-        />
+        <AudioSettingComp v-if="AudioSetting && connectOn" v-model="AudioSetting" :langu="langu" :selMode="selMode"
+          :MainStream="MainStream" :SupportedConstraints="SupportedConstraints" />
 
-        <VideoSettingComp
-          v-if="VideoSetting && connectOn"
-          v-model="VideoSetting"
-          :langu="langu"
-          :selMode="selMode"
-          :MainStream="MainStream"
-          :SupportedConstraints="SupportedConstraints"
-        />
+        <VideoSettingComp v-if="VideoSetting && connectOn" v-model="VideoSetting" :langu="langu" :selMode="selMode"
+          :MainStream="MainStream" :SupportedConstraints="SupportedConstraints" />
 
         <q-card-actions v-if="selMode == 'camera' || selMode == 'capture'" class="tw-justify-end">
-          <q-btn
-            :label="!connectOn ? $t('Connect') : $t('Disconnect')"
+          <q-btn :label="!connectOn ? $t('Connect') : $t('Disconnect')"
             @click="!connectOn ? connectOnBtn() : connectOffBtn()"
-            :class="!connectOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'"
-            :icon="!connectOn ? 'link' : 'link_off'"
-          />
+            :class="!connectOn ? 'tw-bg-lime-300' : 'tw-bg-red-300'" :icon="!connectOn ? 'link' : 'link_off'" />
         </q-card-actions>
       </q-card>
 
@@ -973,8 +946,8 @@ export default defineComponent({
 
           <div class="peer" id="peer-audio">
             <div class="stat-value">
-              <canvas class="peer_canvas rounded" id="canvas-audio" style="background-color: black; width: 268px"> </canvas
-              ><!-- the canvas is filled via the programme-->
+              <canvas class="peer_canvas rounded" id="canvas-audio" style="background-color: black; width: 268px">
+              </canvas><!-- the canvas is filled via the programme-->
             </div>
           </div>
         </q-card-section>
@@ -985,10 +958,12 @@ export default defineComponent({
       </q-card>
 
       <!-- play video from file/recorder -->
-      <PlayerComp v-if="!connectOn && selMode == 'player'" :langu="langu" v-model="FileData" :connectOn="connectOn" :selMode="selMode" />
+      <PlayerComp v-if="!connectOn && selMode == 'player'" :langu="langu" v-model="FileData" :connectOn="connectOn"
+        :selMode="selMode" />
 
       <!-- recorder -->
-      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || FileData.Size > 0" style="max-width: 300px">
+      <q-card v-if="selMode == 'capture' || selMode == 'camera' || selMode == 'player' || FileData.Size > 0"
+        style="max-width: 300px">
         <q-card-section>
           <div v-if="selMode != 'player'" class="text-subtitle1">{{ $t("Recorder_state") }} {{ RecorderState }}</div>
           <div v-if="selMode == 'player'" class="text-subtitle1">Data</div>
@@ -1000,70 +975,35 @@ export default defineComponent({
               {{ $t("Time") }}:
               {{
                 FileData.StartTime && FileData.EndTime
-                  ? moviecat.computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter)
-                  : moviecat.computeTime(RecorderCounter)
+                ? moviecat.computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter)
+                : moviecat.computeTime(RecorderCounter)
               }}
             </div>
             <q-spinner-hourglass v-if="calculateDuration" color="primary" size="1em" />
             <div v-if="calculateDuration" style="font-size: 10px">calculate duration</div>
           </div>
 
-          <q-select
-            v-if="selMode != 'player'"
-            v-model="recorderOptions.mimeType"
-            :options="mimeTypeOptions"
-            emit-value
-            map-options
-            :label="$t('Recorder_mimetype')"
-            :disable="mimeTypeOptions.length == 0 || FileData.Size > 0 || RecorderState != 'inactive'"
-          />
+          <q-select v-if="selMode != 'player'" v-model="recorderOptions.mimeType" :options="mimeTypeOptions" emit-value
+            map-options :label="$t('Recorder_mimetype')"
+            :disable="mimeTypeOptions.length == 0 || FileData.Size > 0 || RecorderState != 'inactive'" />
           <q-input v-if="selMode == 'player'" v-model="FileData.Extension" :label="$t('Recorder_mimetype')" disable />
           <div v-if="selMode == 'capture' || selMode == 'camera'">
             <div class="row">
-              <q-select
-                v-model="recorderOptions.audioBitsPerSecond"
-                :options="audioBPSOptions"
-                emit-value
-                map-options
-                :label="$t('Audio_BPS')"
-                :disable="RecorderState != 'inactive'"
-                style="width: 50%"
-                @update:model-value="saveRecorderData"
-              />
-              <q-select
-                v-model="recorderOptions.videoBitsPerSecond"
-                :options="videoBPSOptions"
-                emit-value
-                map-options
-                :label="$t('Video_BPS')"
-                :disable="RecorderState != 'inactive'"
-                style="width: 50%"
-                @update:model-value="saveRecorderData"
-              />
+              <q-select v-model="recorderOptions.audioBitsPerSecond" :options="audioBPSOptions" emit-value map-options
+                :label="$t('Audio_BPS')" :disable="RecorderState != 'inactive'" style="width: 50%"
+                @update:model-value="saveRecorderData" />
+              <q-select v-model="recorderOptions.videoBitsPerSecond" :options="videoBPSOptions" emit-value map-options
+                :label="$t('Video_BPS')" :disable="RecorderState != 'inactive'" style="width: 50%"
+                @update:model-value="saveRecorderData" />
             </div>
             <div class="row">
-              <q-select
-                v-model="RecorderSlices"
-                :options="RecorderSlicesOptions"
-                emit-value
-                map-options
-                :label="$t('Slice_length')"
-                :disable="RecorderState != 'inactive'"
-                style="width: 50%"
-                @update:model-value="saveRecorderData"
-              />
-              <q-input
-                v-model="recorderAutoStop"
-                :label="$t('Auto_stop')"
-                :disable="RecorderState != 'inactive'"
-                type="number"
-                mask="###"
-                fill-mask="#"
-                reverse-fill-mask
-                style="width: 50%"
+              <q-select v-model="RecorderSlices" :options="RecorderSlicesOptions" emit-value map-options
+                :label="$t('Slice_length')" :disable="RecorderState != 'inactive'" style="width: 50%"
+                @update:model-value="saveRecorderData" />
+              <q-input v-model="recorderAutoStop" :label="$t('Auto_stop')" :disable="RecorderState != 'inactive'"
+                type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 50%"
                 :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 181 || this.$t('InfoMax180')]"
-                @update:model-value="saveRecorderData"
-              />
+                @update:model-value="saveRecorderData" />
             </div>
           </div>
           <q-input v-model="FileData.Name" :label="$t('Filename')" />
@@ -1071,62 +1011,42 @@ export default defineComponent({
         <q-separator />
 
         <q-card-actions class="tw-justify-end tw-gap-2">
-          <q-btn
-            v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')"
-            label="Rec on"
-            icon="videocam"
-            @click="startRecorderBtn"
-            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 180"
-            class="tw-bg-lime-300"
-          />
-          <q-btn
-            v-else-if="selMode == 'capture' || selMode == 'camera'"
-            label="Rec off"
-            icon="videocam_off"
-            @click="stopRecorderBtn"
-            :disable="RecorderState == 'inactive' || !connectOn"
-            class="tw-bg-red-300"
-          />
-          <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="download" />
-          <q-btn
-            v-if="!FileApi"
-            label="upload"
-            icon="upload_file"
-            @click="
-              () => {
-                this.FileInput = '';
-                this.UploadOn = true;
-              }
-            "
-            :disable="RecorderState != 'inactive' || connectOn"
-          />
-          <q-btn label="clear" @click="clearBuffer" :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="delete_forever" />
+          <q-btn v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')" label="Rec on"
+            icon="videocam" @click="startRecorderBtn"
+            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 180" class="tw-bg-lime-300" />
+          <q-btn v-else-if="selMode == 'capture' || selMode == 'camera'" label="Rec off" icon="videocam_off"
+            @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !connectOn" class="tw-bg-red-300" />
+          <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'"
+            icon="download" />
+          <q-btn v-if="!FileApi" label="upload" icon="upload_file" @click="() => {
+              this.FileInput = '';
+              this.UploadOn = true;
+            }
+            " :disable="RecorderState != 'inactive' || connectOn" />
+          <q-btn label="clear" @click="clearBuffer" :disable="FileData.Size == 0 || RecorderState != 'inactive'"
+            icon="delete_forever" />
         </q-card-actions>
       </q-card>
 
       <q-card v-if="FileApi" class="" style="width: 600px">
         <q-card-section>
           <div class="row tw-justify-between">
-            <div class="text-subtitle1">Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ? FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</div>
+            <div class="text-subtitle1">Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ?
+              FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</div>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
-            <q-btn
-              label="native upload"
-              icon="upload_file"
-              @click="
-                () => {
-                  this.FileInput = '';
-                  this.UploadOn = true;
-                }
-              "
-              :disable="RecorderState != 'inactive' || connectOn"
-            />
+            <q-btn label="native upload" icon="upload_file" @click="() => {
+                this.FileInput = '';
+                this.UploadOn = true;
+              }
+              " :disable="RecorderState != 'inactive' || connectOn" />
           </div>
 
           <q-virtual-scroll style="max-height: 280px" :items="FileApiFileEntries" separator v-slot="{ item, index }">
             <q-item :key="index" dense>
               <q-item-section>
                 <q-item-label>
-                  <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${item.key}`, undefined)" :disable="RecorderState != 'inactive' || connectOn" />
+                  <q-btn icon="upload_file" sizes="sx" padding="none" @click="loadFileBtn(`${item.key}`, undefined)"
+                    :disable="RecorderState != 'inactive' || connectOn" />
                   {{ item.key }}
                 </q-item-label>
               </q-item-section>
@@ -1136,7 +1056,8 @@ export default defineComponent({
       </q-card>
 
       <q-dialog v-model="SpinnerOn" no-backdrop-dismiss persistent class="tw-font-sans">
-        <div v-if="SpinnerOn" class="q-gutter-md justify-center"><q-spinner-hourglass color="light-green" size="xl" /></div>
+        <div v-if="SpinnerOn" class="q-gutter-md justify-center"><q-spinner-hourglass color="light-green" size="xl" />
+        </div>
       </q-dialog>
 
       <q-dialog v-model="UploadOn" persistent class="tw-font-sans">

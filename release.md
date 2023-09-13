@@ -2,6 +2,7 @@
 
 - update npm li
 - fix h7 references
+- fix component and var name
 
 # MovieCat 0.2.6
 
