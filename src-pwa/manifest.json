@@ -1,31 +1,44 @@
 {
-  "start_url": "index.html",
+  "start_url": "https://moviecat.azurewebsites.net",
   "id": "/#/moviecat",
+  "name": "MovieCat - The video recorder app",
+  "short_name": "MovieCat",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#027be3",
+  "categories": [
+    "video",
+    "audio",
+    "recorder",
+    "player"
+  ],
+  "description": "Record from camera or screen and save as a movie.",
   "icons": [
     {
-      "src": "icons/favicon-32x32.png",
+      "src": "/icons/favicon-32x32.png",
       "sizes": "32x32",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icons/favicon-96x96.png",
+      "src": "/icons/favicon-96x96.png",
       "sizes": "96x96",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "icons/icon-256x256.png",
+      "src": "/icons/icon-256x256.png",
       "sizes": "256x256",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "screenshots": [
     {
-      "src": "/icons/MovieCat_1.jpg",
+      "src": "/icons/MovieCat_1-1039x810.jpg",
+      "sizes": "1039×810",
       "type": "image/jpg",
-      "sizes": "1039×810"
+      "label": "Homescreen of MovieCat"
     }
   ]
 }

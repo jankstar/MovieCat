@@ -299,14 +299,14 @@ export default defineComponent({
           //mode capture
 
           if (this.audioInputValue != "default" && this.audioInputValue != "off") {
-            configuration.audio = false; //wenn capture und ein mic device, dann audio separat
+            configuration.audio = false; //if capture and a mic device, then audio separately
             this.CaptureAndMic = true;
           }
 
           this.MainStream = await navigator.mediaDevices.getDisplayMedia(configuration);
 
           if (this.CaptureAndMic) {
-            //noch ein mic audio kanal dazu
+            //one more mic audio channel
             let myAudio = await navigator.mediaDevices.getUserMedia({
               video: false,
               audio: {
@@ -488,7 +488,7 @@ export default defineComponent({
         if (this.RecorderSlices && this.RecorderSlices > 0) {
           this.Recorder.start(1000 * this.RecorderSlices); //1 * x sec Slices
         } else {
-          this.Recorder.start(); //ohne slices
+          this.Recorder.start(); //no slices
         }
 
         if (!this.FileData.StartTime) {
@@ -908,8 +908,7 @@ export default defineComponent({
             { label: $t('Capture'), value: 'capture' },
             { label: $t('Camera'), value: 'camera' },
             { label: $t('Player'), value: 'player' },
-          ]" emit-value map-options :label="$t('Mode')" :disable="connectOn"
-            @update:model-value="saveRecorderData" />
+          ]" emit-value map-options :label="$t('Mode')" :disable="connectOn" @update:model-value="saveRecorderData" />
         </q-card-section>
         <q-separator v-if="selMode == 'capture' || selMode == 'camera'" />
         <q-card-section v-if="selMode != 'player'">
@@ -1019,9 +1018,9 @@ export default defineComponent({
           <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'"
             icon="download" />
           <q-btn v-if="!FileApi" label="upload" icon="upload_file" @click="() => {
-              this.FileInput = '';
-              this.UploadOn = true;
-            }
+            this.FileInput = '';
+            this.UploadOn = true;
+          }
             " :disable="RecorderState != 'inactive' || connectOn" />
           <q-btn label="clear" @click="clearBuffer" :disable="FileData.Size == 0 || RecorderState != 'inactive'"
             icon="delete_forever" />
@@ -1035,9 +1034,9 @@ export default defineComponent({
               FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</div>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
             <q-btn label="native upload" icon="upload_file" @click="() => {
-                this.FileInput = '';
-                this.UploadOn = true;
-              }
+              this.FileInput = '';
+              this.UploadOn = true;
+            }
               " :disable="RecorderState != 'inactive' || connectOn" />
           </div>
 
