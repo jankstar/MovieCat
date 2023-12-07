@@ -15,24 +15,24 @@
   },
   "dependencies": {
     "@quasar/babel-preset-app": "^2.0.2",
-    "@quasar/extras": "^1.16.7",
-    "@typescript-eslint/eslint-plugin": "^6.7.3",
+    "@quasar/extras": "^1.16.9",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
     "quasar": "^2.12.07",
     "ts-ebml": "^2.0.2",
-    "vue": "^3.3.4",
-    "vue-i18n": "^9.5.0",
+    "vue": "^3.3.10",
+    "vue-i18n": "^9.8.0",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.22.15",
-    "@quasar/app-vite": "^1.6.2",
+    "@babel/eslint-parser": "^7.23.3",
+    "@quasar/app-vite": "^1.7.1",
     "autoprefixer": "^10.4.16",
-    "eslint": "^8.50.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-vue": "^9.17.0",
-    "postcss": "^8.4.31",
-    "prettier": "^3.0.3",
-    "tailwindcss": "^3.3.3",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "postcss": "^8.4.32",
+    "prettier": "^3.1.0",
+    "tailwindcss": "^3.3.6",
     "workbox-build": "^7.0.0",
     "workbox-cacheable-response": "^7.0.0",
     "workbox-core": "^7.0.0",
@@ -42,7 +42,7 @@
     "workbox-strategies": "^7.0.0"
   },
   "engines": {
-    "node": "^19 || ^18 || ^16 || ^14.19",
+    "node": "^20 || ^19 || ^18 || ^16 || ^14.19",
     "npm": ">= 6.8.1"
   }
 }
