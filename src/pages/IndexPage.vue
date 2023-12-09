@@ -502,7 +502,7 @@ export default defineComponent({
           that.LocalStopFunc = that.download; //download via event!
           that.stopRecorder();
           that.RecorderTimeOutID = undefined;
-        }, 1000 * 60 * this.recorderAutoStop); //180 min = 3h
+        }, 1000 * 60 * this.recorderAutoStop); //200 min = 3:20h
       }
     },
     //
@@ -1001,7 +1001,7 @@ export default defineComponent({
                 @update:model-value="saveRecorderData" />
               <q-input v-model="recorderAutoStop" :label="$t('Auto_stop')" :disable="RecorderState != 'inactive'"
                 type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 50%"
-                :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 181 || this.$t('InfoMax180')]"
+                :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 181 || this.$t('InfoMax200')]"
                 @update:model-value="saveRecorderData" />
             </div>
           </div>
@@ -1012,7 +1012,7 @@ export default defineComponent({
         <q-card-actions class="tw-justify-end tw-gap-2">
           <q-btn v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')" label="Rec on"
             icon="videocam" @click="startRecorderBtn"
-            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 180" class="tw-bg-lime-300" />
+            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 200" class="tw-bg-lime-300" />
           <q-btn v-else-if="selMode == 'capture' || selMode == 'camera'" label="Rec off" icon="videocam_off"
             @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !connectOn" class="tw-bg-red-300" />
           <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'"

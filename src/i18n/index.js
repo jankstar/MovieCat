@@ -56,7 +56,7 @@ export default {
     "InfoNoMediaStream": "no media stream",
     "InfoAudioOffVideoOff": "audio and video off - no media stream",
     "InfoMin1": "The minimum is 1 min",
-    "InfoMax180": "The maximum is 180 min",
+    "InfoMax200": "The maximum is 200 min",
     "WarningFileExtension": "File Extension Warning: the expected extesion should be",
 
     "QMemory": "There is data in memory - delete?",
@@ -105,7 +105,7 @@ export default {
     "Time": "Zeit",
     "Required": "* Mussfeld",
     "InfoMin1": "Das Minimum ist 1 min",
-    "InfoMax180": "Das Maximum sind 180 min",
+    "InfoMax200": "Das Maximum sind 200 min",
     "Confirm": "Bestätigung",
 
     "Start": "Start",
