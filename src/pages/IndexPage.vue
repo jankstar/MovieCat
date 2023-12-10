@@ -1001,7 +1001,7 @@ export default defineComponent({
                 @update:model-value="saveRecorderData" />
               <q-input v-model="recorderAutoStop" :label="$t('Auto_stop')" :disable="RecorderState != 'inactive'"
                 type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 50%"
-                :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 181 || this.$t('InfoMax200')]"
+                :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 201 || this.$t('InfoMax200')]"
                 @update:model-value="saveRecorderData" />
             </div>
           </div>
@@ -1010,20 +1010,20 @@ export default defineComponent({
         <q-separator />
 
         <q-card-actions class="tw-justify-end tw-gap-2">
-          <q-btn v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')" label="Rec on"
-            icon="videocam" @click="startRecorderBtn"
+          <q-btn v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')"
+            :label="this.$t('Rec_on')" icon="videocam" @click="startRecorderBtn"
             :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 200" class="tw-bg-lime-300" />
-          <q-btn v-else-if="selMode == 'capture' || selMode == 'camera'" label="Rec off" icon="videocam_off"
+          <q-btn v-else-if="selMode == 'capture' || selMode == 'camera'" :label="this.$t('Rec_off')" icon="videocam_off"
             @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !connectOn" class="tw-bg-red-300" />
-          <q-btn label="download" @click="download" :disable="FileData.Size == 0 || RecorderState != 'inactive'"
-            icon="download" />
-          <q-btn v-if="!FileApi" label="upload" icon="upload_file" @click="() => {
+          <q-btn :label="this.$t('Download')" @click="download"
+            :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="download" />
+          <q-btn v-if="!FileApi" :label="this.$t('Upload')" icon="upload_file" @click="() => {
             this.FileInput = '';
             this.UploadOn = true;
           }
             " :disable="RecorderState != 'inactive' || connectOn" />
-          <q-btn label="clear" @click="clearBuffer" :disable="FileData.Size == 0 || RecorderState != 'inactive'"
-            icon="delete_forever" />
+          <q-btn :label="this.$t('Clear')" @click="clearBuffer"
+            :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="delete_forever" />
         </q-card-actions>
       </q-card>
 
@@ -1033,7 +1033,7 @@ export default defineComponent({
             <div class="text-subtitle1">Files {{ `*/${FileApiFileHandler && FileApiFileHandler.name ?
               FileApiFileHandler.name : "?"}: ${FileApiFileEntries.length || 0}` }}</div>
             <q-btn label="DIR" icon="folder" @click="openDirBtn" />
-            <q-btn label="native upload" icon="upload_file" @click="() => {
+            <q-btn :label="this.$t('Native_Upload')" icon="upload_file" @click="() => {
               this.FileInput = '';
               this.UploadOn = true;
             }
