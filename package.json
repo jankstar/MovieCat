@@ -1,6 +1,6 @@
 {
   "name": "moviecat",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Record from camera or screen and save as a movie.",
   "productName": "MovieCat",
   "author": "jankstar <jankstar.berlin@gmail.com>",

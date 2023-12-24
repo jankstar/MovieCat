@@ -1,3 +1,8 @@
+# MovieCat 0.2.8
+
+- fix calculation duration
+- update npm
+
 # MovieCat 0.2.7
 
 - update npm li
