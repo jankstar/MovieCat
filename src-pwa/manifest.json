@@ -6,6 +6,12 @@
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#027be3",
+  "display_override": [
+    "fullscreen",
+    "minimal-ui"
+  ],
+  "display": "standalone",
+  "protocol_handlers": [],
   "categories": [
     "video",
     "audio",
@@ -38,6 +44,7 @@
       "src": "/icons/MovieCat_1-1039x810.jpg",
       "sizes": "1039×810",
       "type": "image/jpg",
+      "form_factor": "wide",
       "label": "Homescreen of MovieCat"
     }
   ]
