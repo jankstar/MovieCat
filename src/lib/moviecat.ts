@@ -10,9 +10,12 @@ const ConstAudioBPSOptions = [
 ]
 
 const ConstVideoBPSOptions = [
-  { value: 1000000, label: "1Mbit/s" },
-  { value: 2500000, label: "2,5Mbit/s" },
-  { value: 6000000, label: "6Mbit/s" },
+  { value: 1000000, label: "1Mbit/s (360p)" },
+  { value: 2500000, label: "2,5Mbit/s (480p)" },
+  { value: 5000000, label: "5Mbit/s (720p)" },
+  { value: 8000000, label: "8Mbit/s (1080p)" },
+  { value: 16000000, label: "16Mbit/s (2k)" },
+  { value: 40000000, label: "40Mbit/s (4k)" },
 ]
 
 const ConstRecorderSlicesOptions = [

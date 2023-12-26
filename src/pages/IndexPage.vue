@@ -989,18 +989,18 @@ export default defineComponent({
           <div v-if="selMode == 'capture' || selMode == 'camera'">
             <div class="row">
               <q-select v-model="recorderOptions.audioBitsPerSecond" :options="audioBPSOptions" emit-value map-options
-                :label="$t('Audio_BPS')" :disable="RecorderState != 'inactive'" style="width: 50%"
+                :label="$t('Audio_BPS')" :disable="RecorderState != 'inactive'" style="width: 45%"
                 @update:model-value="saveRecorderData" />
               <q-select v-model="recorderOptions.videoBitsPerSecond" :options="videoBPSOptions" emit-value map-options
-                :label="$t('Video_BPS')" :disable="RecorderState != 'inactive'" style="width: 50%"
+                :label="$t('Video_BPS')" :disable="RecorderState != 'inactive'" style="width: 55%"
                 @update:model-value="saveRecorderData" />
             </div>
             <div class="row">
               <q-select v-model="RecorderSlices" :options="RecorderSlicesOptions" emit-value map-options
-                :label="$t('Slice_length')" :disable="RecorderState != 'inactive'" style="width: 50%"
+                :label="$t('Slice_length')" :disable="RecorderState != 'inactive'" style="width: 45%"
                 @update:model-value="saveRecorderData" />
               <q-input v-model="recorderAutoStop" :label="$t('Auto_stop')" :disable="RecorderState != 'inactive'"
-                type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 50%"
+                type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 55%"
                 :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 201 || this.$t('InfoMax200')]"
                 @update:model-value="saveRecorderData" />
             </div>
