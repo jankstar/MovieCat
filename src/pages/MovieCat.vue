@@ -73,8 +73,10 @@ export default defineComponent({
           <div>Dependencies</div>
           <div v-for="item in dependenciesList" v-bind:key="item">{{ item }}</div>
           <br /><br />
-          GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank" class="text-overline">https://github.com/jankstar/MovieCat</a><br />
-          <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c) 2023 jankstar</a><br />
+          GitHub: <a href="https://github.com/jankstar/MovieCat" target="_blank"
+            class="text-overline">https://github.com/jankstar/MovieCat</a><br />
+          <a href="https://github.com/jankstar/MovieCat/blob/main/LICENSE" target="_blank">MIT License Copyright (c)
+            2024 jankstar</a><br />
         </q-card-section>
         <q-separator />
 
