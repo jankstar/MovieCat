@@ -280,6 +280,13 @@ export default defineComponent({
           this.$q.notify({ type: "negative", message: `${err.name}: ${err.message}`, position: "center", timeout: 5000 });
         });
     },
+
+    getCapabilities(track) {
+      if (track && track["getCapabilities"]) {
+        return track.getCapabilities();
+      }
+      return { "width": null, "height": null, "frameRate": null };
+    },
     //
     async startDisplayMedia() {
       console.log("startDisplayMedia()");
@@ -343,7 +350,8 @@ export default defineComponent({
           this.VideoSetting = lTracks[0].getSettings();
           this.VideoSetting.enabled = lTracks[0].enabled;
           console.log("video getSettings()", JSON.stringify(this.VideoSetting));
-          console.log("video getCapabilities()", JSON.stringify(lTracks[0].getCapabilities()));
+          console.log("video getCapabilities()", JSON.stringify(this.getCapabilities(lTracks[0])));
+
         }
 
         lTracks = this.MainStream.getAudioTracks();
@@ -364,7 +372,7 @@ export default defineComponent({
           this.AudioSetting = lTracks[0].getSettings();
           this.AudioSetting.muted = lTracks[0].muted || !lTracks[0].enabled;
           console.log("audio getSettings()", JSON.stringify(this.AudioSetting));
-          console.log("audio getCapabilities()", JSON.stringify(lTracks[0].getCapabilities()));
+          console.log("audio getCapabilities()", JSON.stringify(this.getCapabilities(lTracks[0])));
           this.drawCanvas("audio");
         }
 
@@ -974,8 +982,8 @@ export default defineComponent({
               {{ $t("Time") }}:
               {{
                 FileData.StartTime && FileData.EndTime
-                ? moviecat.computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter)
-                : moviecat.computeTime(RecorderCounter)
+                  ? moviecat.computeTime((FileData.EndTime - FileData.StartTime) / 1000 + RecorderCounter)
+                  : moviecat.computeTime(RecorderCounter)
               }}
             </div>
             <q-spinner-hourglass v-if="calculateDuration" color="primary" size="1em" />
@@ -1012,7 +1020,8 @@ export default defineComponent({
         <q-card-actions class="tw-justify-end tw-gap-2">
           <q-btn v-if="RecorderState == 'inactive' && (selMode == 'capture' || selMode == 'camera')"
             :label="this.$t('Rec_on')" icon="videocam" @click="startRecorderBtn"
-            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 200" class="tw-bg-lime-300" />
+            :disable="RecorderState != 'inactive' || !connectOn || this.recorderAutoStop > 200"
+            class="tw-bg-lime-300" />
           <q-btn v-else-if="selMode == 'capture' || selMode == 'camera'" :label="this.$t('Rec_off')" icon="videocam_off"
             @click="stopRecorderBtn" :disable="RecorderState == 'inactive' || !connectOn" class="tw-bg-red-300" />
           <q-btn :label="this.$t('Download')" @click="download"

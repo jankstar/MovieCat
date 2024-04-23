@@ -46,7 +46,9 @@ export default defineComponent({
       let [traks] = this.MainStream.getAudioTracks();
       if (traks) {
         console.log("AudioSettingBtn()");
-        this.AudioCapabilities = traks.getCapabilities();
+        if (traks["getCapabilities"]) {
+          this.AudioCapabilities = traks.getCapabilities();
+        }
         this.AudioSettingNew = JSON.parse(JSON.stringify(this.Setting));
         this.AudioSettingDialog = true;
       }
@@ -93,7 +95,8 @@ export default defineComponent({
         <q-separator />
         <q-btn flat round sizes="sx" padding="none" icon="edit" @click="AudioSettingBtn" />
       </div>
-      <div class="text-body2">{{ $t("AudioMuted") }}: {{ Setting && Setting.muted == false ? $t("Off") : $t("On") }}</div>
+      <div class="text-body2">{{ $t("AudioMuted") }}: {{ Setting && Setting.muted == false ? $t("Off") : $t("On") }}
+      </div>
       <div v-if="SupportedConstraints.autoGainControl" class="text-body2">
         {{ $t("AutoGainControl") }}: {{ Setting && Setting.autoGainControl == false ? $t("Off") : $t("On") }}
       </div>
@@ -103,7 +106,8 @@ export default defineComponent({
       <div v-if="SupportedConstraints.echoCancellation" class="text-body2">
         {{ $t("EchoCancellation") }}: {{ Setting && Setting.echoCancellation == false ? $t("Off") : $t("On") }}
       </div>
-      <div v-if="SupportedConstraints.sampleRate" class="text-body2">{{ $t("SampleRate") }}: {{ Setting ? (Setting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</div>
+      <div v-if="SupportedConstraints.sampleRate" class="text-body2">{{ $t("SampleRate") }}: {{ Setting ?
+        (Setting.sampleRate / 1000).toFixed(0) : "0" }} kB/sec</div>
     </q-card-section>
     <q-separator />
   </div>
@@ -113,48 +117,22 @@ export default defineComponent({
       <q-card-section>
         <div class="text-h6">Audio Settings</div>
         <div class="row">
-          <q-select v-model="AudioSettingNew.muted" :options="OnOffOptions" emit-value map-options :label="$t('AudioMuted')" style="width: 45%" />
-          <q-select
-            v-if="SupportedConstraints.autoGainControl"
-            v-model="AudioSettingNew.autoGainControl"
-            :options="OnOffOptions"
-            emit-value
-            map-options
-            :label="$t('AutoGainControl')"
-            style="width: 45%"
-          />
-          <q-select
-            v-if="SupportedConstraints.noiseSuppression"
-            v-model="AudioSettingNew.noiseSuppression"
-            :options="OnOffOptions"
-            emit-value
-            map-options
-            :label="$t('NoiseSuppression')"
-            style="width: 45%"
-          />
-          <q-select
-            v-if="SupportedConstraints.echoCancellation"
-            v-model="AudioSettingNew.echoCancellation"
-            :options="OnOffOptions"
-            emit-value
-            map-options
-            :label="$t('EchoCancellation')"
-            style="width: 45%"
-          />
+          <q-select v-model="AudioSettingNew.muted" :options="OnOffOptions" emit-value map-options
+            :label="$t('AudioMuted')" style="width: 45%" />
+          <q-select v-if="SupportedConstraints.autoGainControl" v-model="AudioSettingNew.autoGainControl"
+            :options="OnOffOptions" emit-value map-options :label="$t('AutoGainControl')" style="width: 45%" />
+          <q-select v-if="SupportedConstraints.noiseSuppression" v-model="AudioSettingNew.noiseSuppression"
+            :options="OnOffOptions" emit-value map-options :label="$t('NoiseSuppression')" style="width: 45%" />
+          <q-select v-if="SupportedConstraints.echoCancellation" v-model="AudioSettingNew.echoCancellation"
+            :options="OnOffOptions" emit-value map-options :label="$t('EchoCancellation')" style="width: 45%" />
         </div>
         <br />
         <div v-if="SupportedConstraints.sampleRate" class="text-body2">
           {{ $t("SampleRate") }}: {{ AudioSettingNew ? (AudioSettingNew.sampleRate / 1000).toFixed(0) : "0" }} kB/sec
         </div>
         <br />
-        <q-slider
-          v-if="SupportedConstraints.sampleRate"
-          v-model="AudioSettingNew.sampleRate"
-          :min="AudioCapabilities.sampleRate.min"
-          :max="AudioCapabilities.sampleRate.max"
-          label
-          style="width: 90%"
-        />
+        <q-slider v-if="SupportedConstraints.sampleRate" v-model="AudioSettingNew.sampleRate"
+          :min="AudioCapabilities.sampleRate.min" :max="AudioCapabilities.sampleRate.max" label style="width: 90%" />
       </q-card-section>
       <q-separator />
 
