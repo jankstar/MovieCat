@@ -1,39 +1,31 @@
 {
-  "start_url": "https://moviecat.azurewebsites.net",
+  "start_url": "https://jankstar.de/movie_cat/",
   "id": "/#/moviecat",
   "name": "MovieCat - The video recorder app",
   "short_name": "MovieCat",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#027be3",
-  "display_override": [
-    "fullscreen",
-    "minimal-ui"
-  ],
+  "display_override": ["fullscreen", "minimal-ui"],
   "display": "standalone",
   "protocol_handlers": [],
-  "categories": [
-    "video",
-    "audio",
-    "recorder",
-    "player"
-  ],
+  "categories": ["video", "audio", "recorder", "player"],
   "description": "Record from camera or screen and save as a movie.",
   "icons": [
     {
-      "src": "/icons/favicon-32x32.png",
+      "src": "/movie_cat/icons/favicon-32x32.png",
       "sizes": "32x32",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/favicon-96x96.png",
+      "src": "/movie_cat/icons/favicon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-256x256.png",
+      "src": "/movie_cat/icons/icon-256x256.png",
       "sizes": "256x256",
       "type": "image/png",
       "purpose": "any"
@@ -41,7 +33,7 @@
   ],
   "screenshots": [
     {
-      "src": "/icons/MovieCat_1-1039x810.jpg",
+      "src": "/movie_cat/icons/MovieCat_1-1039x810.jpg",
       "sizes": "1039×810",
       "type": "image/jpg",
       "form_factor": "wide",

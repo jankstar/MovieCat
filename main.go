@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -141,10 +142,15 @@ func main() {
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	r.Use(gin.Recovery())
 
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/movie_cat/")
+	})
+
 	//r.StaticFS("/", http.Dir("dist/spa")) //via NoRoute
 	r.NoRoute(func(c *gin.Context) {
 		dir, file := path.Split(c.Request.RequestURI)
 		ext := filepath.Ext(file)
+		fmt.Println("dir: ", dir, "file: ", file, "ext: ", ext)
 
 		//lToken := TToken{
 		//	Random:    uuid.New().String(),

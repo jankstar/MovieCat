@@ -3,7 +3,7 @@
 Chrome App (PWA): Record from camera or screen and save as a movie.
 
 use it <br/>
-[`moviecat.azurewebsites.net`](https://moviecat.azurewebsites.net)
+[`https://jankstar.de/movie_cat`](https://jankstar.de/movie_cat)
 
 or clone it<br/>
 `git clone https://github.com/jankstar/MovieCat.git`
@@ -61,6 +61,9 @@ The application is generated with the following command:
 
 In the configuration, `minify: false ` can be set if the source code is to be analysed. In addition, `useFilenameHashes: false ` can be used to prevent new file names from being generated again and again for the generated assets and, if necessary, to force the server to reload them.
 
-The server is generated under linux (Azure Cloud) with the command `env GOOS=linux GOARCH=amd64 go build -o server main.go `. In the Azure Cloud, the server is then started `/home/site/wwwroot/server`. Of course, node.js can also be used.
+2024/07/21: I have set `publicPath` to the path `movie_cat`. Also `vite.config.js` the variable `base` so that the programme runs on the sub-URI.
+This means that this repository can no longer be diployed directly to Azure.
+
+<del>The server is generated under linux (Azure Cloud) with the command `env GOOS=linux GOARCH=amd64 go build -o server main.go `. In the Azure Cloud, the server is then started `/home/site/wwwroot/server`. Of course, node.js can also be used.</del>
 
 (2023/04/01)
