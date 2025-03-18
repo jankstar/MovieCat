@@ -9,10 +9,11 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 
-const { configure } = require('quasar/wrappers');
+//const { configure } = require('quasar/wrappers');
+import { defineConfig } from '#q-app/wrappers'
 
 
-module.exports = configure(function (/* ctx */) {
+module.exports = defineConfig(function (/* ctx */) {
   return {
     eslint: {
       // fix: true,
@@ -147,7 +148,7 @@ module.exports = configure(function (/* ctx */) {
 
     // https://v2.quasar.dev/quasar-cli/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'generateSW', // or 'injectManifest'
+      workboxMode: 'GenerateSW', // or 'injectManifest'
       injectPwaMetaTags: true,
       swFilename: 'sw.js',
       manifestFilename: 'manifest.json',

@@ -149,6 +149,7 @@ func main() {
 	//r.StaticFS("/", http.Dir("dist/spa")) //via NoRoute
 	r.NoRoute(func(c *gin.Context) {
 		dir, file := path.Split(c.Request.RequestURI)
+		dir = strings.Replace(dir, "/movie_cat", "", 1)
 		ext := filepath.Ext(file)
 		fmt.Println("dir: ", dir, "file: ", file, "ext: ", ext)
 
@@ -168,13 +169,13 @@ func main() {
 	})
 
 	fmt.Println("server ip is ", ExternalIP(), " on port", strconv.Itoa(GetPort()))
-	//router.Run("0.0.0.0:8080")
-	if strings.HasPrefix(ExternalIP(), "192.168") {
-		//if local, then with TLS
-		panic(r.RunTLS(ExternalIP()+":"+strconv.Itoa(GetPort()), "./key/server.pem", "./key/server.key").Error())
-	} else {
-		//if global IP without TLS
-		panic(r.Run(ExternalIP() + ":" + strconv.Itoa(GetPort())).Error())
-	}
+	r.Run("0.0.0.0:8080")
+	//if strings.HasPrefix(ExternalIP(), "192.168") {
+	//if local, then with TLS
+	//	panic(r.RunTLS(ExternalIP()+":"+strconv.Itoa(GetPort()), "./key/server.pem", "./key/server.key").Error())
+	//} else {
+	//if global IP without TLS
+	//panic(r.Run(ExternalIP() + ":" + strconv.Itoa(GetPort())).Error())
+	//}
 
 }

@@ -4,9 +4,7 @@ export default defineConfig({
   base: "/movie_cat/",
   build: {
     rollupOptions: {
-      external: [
-        /^node:.*/,
-      ]
+      external: ['register-service-worker']
     }
   },
 })
