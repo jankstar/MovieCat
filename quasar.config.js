@@ -56,8 +56,8 @@ module.exports = defineConfig(function (/* ctx */) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
       target: {
-        browser: ['es2019', 'edge88', 'firefox78', 'chrome87', 'safari13.1'],
-        node: 'node16'
+        browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
+        node: 'node20'
       },
 
       vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -76,7 +76,13 @@ module.exports = defineConfig(function (/* ctx */) {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf(viteConf, { isServer, isClient }) {
+        return {
+          build: {
+            cssMinify: 'lightningcss', // oder 'lightningcss' für erweiterte Optimierung
+          }
+        }
+      }
       // viteVuePluginOptions: {},
 
 
@@ -111,7 +117,7 @@ module.exports = defineConfig(function (/* ctx */) {
 
     // animations: 'all', // --- includes all animations
     // https://v2.quasar.dev/options/animations
-    animations: [],
+    animations: 'all', //[],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#property-sourcefiles
     // sourceFiles: {
@@ -202,7 +208,7 @@ module.exports = defineConfig(function (/* ctx */) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-browser-extensions/configuring-bex
     bex: {
       contentScripts: [
-        'my-content-script'
+        //'my-content-script'
       ],
 
       // extendBexScriptsConf (esbuildConf) {}

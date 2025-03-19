@@ -7,4 +7,5 @@ export default defineConfig({
       external: ['register-service-worker']
     }
   },
+
 })
