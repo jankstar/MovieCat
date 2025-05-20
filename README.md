@@ -66,4 +66,6 @@ This means that this repository can no longer be diployed directly to Azure.
 
 <del>The server is generated under linux (Azure Cloud) with the command `env GOOS=linux GOARCH=amd64 go build -o server main.go `. In the Azure Cloud, the server is then started `/home/site/wwwroot/server`. Of course, node.js can also be used.</del>
 
+`quasar dev -m pwa` for testing.
+
 (2023/04/01)

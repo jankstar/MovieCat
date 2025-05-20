@@ -1,3 +1,7 @@
+# MovieCat 0.2.9
+
+- new field and function auto_start in min
+
 # MovieCat 0.2.8
 
 - fix calculation duration
