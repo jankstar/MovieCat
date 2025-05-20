@@ -76,6 +76,7 @@ module.exports = defineConfig(function (/* ctx */) {
       // polyfillModulePreload: true,
       // distDir
 
+      // eslint-disable-next-line no-unused-vars
       extendViteConf(viteConf, { isServer, isClient }) {
         return {
           build: {

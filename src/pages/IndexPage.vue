@@ -61,6 +61,7 @@ export default defineComponent({
 
       RecorderSlices: 10, //in sec
       RecorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
+      recorderAutoStart: 0, //in min
       recorderAutoStop: 30, //in min
       RecorderState: "inactive",
       RecorderTimeOutID: undefined,
@@ -129,6 +130,7 @@ export default defineComponent({
       localStorage.setItem("selMode", JSON.stringify(this.selMode));
       localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
       localStorage.setItem("RecorderSlices", JSON.stringify(this.RecorderSlices));
+      localStorage.setItem("recorderAutoStart", JSON.stringify(this.recorderAutoStart));
       localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
     },
     loadRecorderData() {
@@ -155,6 +157,14 @@ export default defineComponent({
           let RecorderSlices = JSON.parse(JSONRecorderSlices);
           if (RecorderSlices) {
             this.RecorderSlices = RecorderSlices;
+          }
+        }
+
+        const JSONrecorderAutoSart = localStorage.getItem("recorderAutoStart");
+        if (JSONrecorderAutoSart) {
+          let recorderAutoStart = JSON.parse(JSONrecorderAutoSart);
+          if (recorderAutoStart) {
+            this.recorderAutoStart = recorderAutoStart;
           }
         }
 
@@ -485,10 +495,33 @@ export default defineComponent({
         this.Recorder = undefined;
       }
     },
+
+    _waiting(ms: number) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    _getTimeAsString(min: number) {
+      let date = new Date();
+      date.setMinutes(date.getMinutes() + min / 60 / 1000);
+      let hours = date.getHours();
+      let minutes = "0" + date.getMinutes();
+      return `${hours}:${minutes.toString().padStart(2, '0')}`;
+
+    },
+
     //
     async startRecorderBtn() {
       console.log(`startRecorderBtn()`);
       let that = this;
+
+      if (this.recorderAutoStart != 0) {
+        //auto start in x min
+        this.SpinnerOn = true;
+        console.log(`waiting ${this.recorderAutoStart} min`);
+        await this._waiting(this.recorderAutoStart * 60 * 1000);
+        console.log(`starting after ${this.recorderAutoStart} min`);
+        this.SpinnerOn = false;
+      }
 
       await this.newMediaRecorder();
 
@@ -1007,8 +1040,13 @@ export default defineComponent({
               <q-select v-model="RecorderSlices" :options="RecorderSlicesOptions" emit-value map-options
                 :label="$t('Slice_length')" :disable="RecorderState != 'inactive'" style="width: 45%"
                 @update:model-value="saveRecorderData" />
+            </div>
+            <div class="row">
+              <q-input v-model="recorderAutoStart" :label="$t('Auto_start')" :disable="RecorderState != 'inactive'"
+                type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 49%"
+                @update:model-value="saveRecorderData" />
               <q-input v-model="recorderAutoStop" :label="$t('Auto_stop')" :disable="RecorderState != 'inactive'"
-                type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 55%"
+                type="number" mask="###" fill-mask="#" reverse-fill-mask style="width: 49%"
                 :rules="[(val) => !!val || this.$t('Required'), (val) => val > 0 || this.$t('InfoMin1'), (val) => val < 201 || this.$t('InfoMax200')]"
                 @update:model-value="saveRecorderData" />
             </div>
@@ -1030,7 +1068,7 @@ export default defineComponent({
             this.FileInput = '';
             this.UploadOn = true;
           }
-            " :disable="RecorderState != 'inactive' || connectOn" />
+          " :disable="RecorderState != 'inactive' || connectOn" />
           <q-btn :label="this.$t('Clear')" @click="clearBuffer"
             :disable="FileData.Size == 0 || RecorderState != 'inactive'" icon="delete_forever" />
         </q-card-actions>
@@ -1046,7 +1084,7 @@ export default defineComponent({
               this.FileInput = '';
               this.UploadOn = true;
             }
-              " :disable="RecorderState != 'inactive' || connectOn" />
+            " :disable="RecorderState != 'inactive' || connectOn" />
           </div>
 
           <q-virtual-scroll style="max-height: 280px" :items="FileApiFileEntries" separator v-slot="{ item, index }">
