@@ -33,6 +33,8 @@ It would be possible to create several files, which you later join together with
 For decoding the WebM data, `arrayBuffer` objects are used; these are limited to 2 GByte - this function is only available for smaller files.
 The upload processes slices in 2 GByte blocks (array of blobs).
 
+The `save at size` field can be used to control that the recording saves automatically when this file length is reached. The value is only approximate because the slice length determines the blob to be saved. The file name is then appended with the date and time and there are several files that have to be joined together later, e.g. with ffmpeg. On a Mac, the setting “4 GB” for 10 sec slice and 8Mbis/s(1080) has proved successful.
+
 ## File api
 
 If the function `showDirectoryPicker` is available, a card for a directory and file handling is displayed. A file can be read and also written to this directory when saving (download button/function).
@@ -42,6 +44,8 @@ For WebM, the file is decoded and the metadata, e.g. duration, is determined. Th
 ## Supported codec
 
 The supported codec depends on the browser - Chrome in version 113, for example, only supports WebM as a container and VP8, VP9 or H.264 for video encoding. The media player, however, can play mp4. For this reason, only files with the WebM extension are selected in the file api. The button for native upload also loads any other file. For ts (mpeg), for example, only the sound is decoded and played on. So if you need a player, you should use VLC.
+
+Compression and post-processing (e.g. deleting commercials) is easier for mp4, so I use the tool `HandBrake` on a Mac to convert webm to mp4, then chain several files with ffmpeg if necessary and edit with `Avidemux`.
 
 # Server
 

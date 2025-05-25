@@ -63,6 +63,9 @@ export default defineComponent({
       RecorderSlicesOptions: moviecat.ConstRecorderSlicesOptions,
       recorderAutoStart: 0, //in min
       recorderAutoStop: 30, //in min
+      recorderMaxSize: 0, //in MB
+      recorderMaxSizeOptions: moviecat.ConstRecorderMaxSizeOptions,
+      recorderDownload: false,
       RecorderState: "inactive",
       RecorderTimeOutID: undefined,
       UploadOn: false,
@@ -70,12 +73,12 @@ export default defineComponent({
       FileData: {
         Name: "test",
         Extension: "",
-        StartTime: undefined,
-        EndTime: undefined,
-        Size: 0,
+        StartTime: <number>undefined,
+        EndTime: <number>undefined,
+        Size: <number>0,
         BlobList: [],
-        Duration: 0, //Attention only integer in sec !
-        Position: 0, //Attention only integer in sec !
+        Duration: <number>0, //Attention only integer in sec !
+        Position: <number>0, //Attention only integer in sec !
       },
 
       LocalStopFunc: undefined,
@@ -130,6 +133,7 @@ export default defineComponent({
       localStorage.setItem("selMode", JSON.stringify(this.selMode));
       localStorage.setItem("recorderOptions", JSON.stringify(this.recorderOptions));
       localStorage.setItem("RecorderSlices", JSON.stringify(this.RecorderSlices));
+      localStorage.setItem("recorderMaxSize", JSON.stringify(this.recorderMaxSize));
       localStorage.setItem("recorderAutoStart", JSON.stringify(this.recorderAutoStart));
       localStorage.setItem("recorderAutoStop", JSON.stringify(this.recorderAutoStop));
     },
@@ -157,6 +161,14 @@ export default defineComponent({
           let RecorderSlices = JSON.parse(JSONRecorderSlices);
           if (RecorderSlices) {
             this.RecorderSlices = RecorderSlices;
+          }
+        }
+
+        const JSONrecorderMaxSize = localStorage.getItem("recorderMaxSize");
+        if (JSONrecorderMaxSize) {
+          let recorderMaxSize = JSON.parse(JSONrecorderMaxSize);
+          if (recorderMaxSize) {
+            this.recorderMaxSize = recorderMaxSize;
           }
         }
 
@@ -418,7 +430,17 @@ export default defineComponent({
             that.FileData.EndTime = Date.now();
             that.FileData.Duration = Math.trunc((that.FileData.EndTime - that.FileData.StartTime) / 1000);
             that.FileData.Size += e.data.size;
+            console.log(`new file size: ${that.FileData.Size} bytes`);
+
             that.RecorderCounter = 0;
+
+            if (that.recorderDownload == false && that.recorderMaxSize != 0 && that.FileData.Size > (that.recorderMaxSize * 1000)) {
+              console.log(`maxSize ${that.recorderMaxSize} reached and saving...`);
+              that.recorderDownload = true;
+              that.stopAndDownload();
+            }
+
+
           }
         };
 
@@ -461,6 +483,29 @@ export default defineComponent({
       } catch (err) {
         console.error(`${err.name}: ${err.message}`);
       }
+    },
+
+    async stopAndDownload() {
+      console.log(`stopAndDownload()`);
+      this.stopRecorder();
+      let that = this
+      setTimeout(() => {
+
+        let _data = [...that.FileData.BlobList];
+        that.downloadBackground(_data);
+
+        that.FileData.BlobList = [];
+        that.FileData.Size = 0;
+        that.FileData.StartTime = Date.now();
+        that.FileData.EndTime = that.FileData.StartTime;
+
+        if (that.RecorderSlices && that.RecorderSlices > 0) {
+          that.Recorder.start(1000 * that.RecorderSlices); //1 * x sec Slices
+        } else {
+          that.Recorder.start(); //no slices
+        }
+        that.recorderDownload = false;
+      }, 100);
     },
 
     //
@@ -565,6 +610,37 @@ export default defineComponent({
       this.RecorderState = this.Recorder && this.Recorder.state ? this.Recorder.state : "inactive";
     },
     //
+
+    async downloadBackground(myBlobListe: Array<Blob>) {
+      console.log(`download background: ${myBlobListe.length} blobs`);
+      if (myBlobListe && myBlobListe.length > 0) {
+
+        //native download without file api
+        const blob = new Blob(myBlobListe, { type: this.recorderOptions.mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        const jetzt = new Date();
+        const jahr = jetzt.getFullYear();
+        const monat = String(jetzt.getMonth() + 1).padStart(2, '0');
+        const tag = String(jetzt.getDate()).padStart(2, '0');
+        const stunde = String(jetzt.getHours()).padStart(2, '0');
+        const minute = String(jetzt.getMinutes()).padStart(2, '0');
+        const sekunde = String(jetzt.getSeconds()).padStart(2, '0');
+        const ms = String(jetzt.getMilliseconds()).padStart(3, '0');
+        a.download = `${this.FileData.Name}_${jahr}-${monat}-${tag}_${stunde}${minute}${sekunde}_${ms}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+        console.log(`filename ${a.download}`);
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }, 3000);
+
+      }
+    },
+
     async download() {
       console.log(`download: ${this.FileData.BlobList.length} blobs`);
       this.SpinnerOn = true;
@@ -591,7 +667,19 @@ export default defineComponent({
           const a = document.createElement("a");
           a.style.display = "none";
           a.href = url;
-          a.download = `${this.FileData.Name}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+          if (this.recorderMaxSize == 0) {
+            a.download = `${this.FileData.Name}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+          } else {
+            const jetzt = new Date();
+            const jahr = jetzt.getFullYear();
+            const monat = String(jetzt.getMonth() + 1).padStart(2, '0');
+            const tag = String(jetzt.getDate()).padStart(2, '0');
+            const stunde = String(jetzt.getHours()).padStart(2, '0');
+            const minute = String(jetzt.getMinutes()).padStart(2, '0');
+            const sekunde = String(jetzt.getSeconds()).padStart(2, '0');
+            const ms = String(jetzt.getMilliseconds()).padStart(3, '0');
+            a.download = `${this.FileData.Name}_${jahr}-${monat}-${tag}_${stunde}${minute}${sekunde}_${ms}.${this.recorderOptions.mimeType.split(";")[0].split("/")[1]}`;
+          }
           console.log(`filename ${a.download}`);
           document.body.appendChild(a);
           a.click();
@@ -1040,6 +1128,11 @@ export default defineComponent({
               <q-select v-model="RecorderSlices" :options="RecorderSlicesOptions" emit-value map-options
                 :label="$t('Slice_length')" :disable="RecorderState != 'inactive'" style="width: 45%"
                 @update:model-value="saveRecorderData" />
+
+              <q-select v-model="recorderMaxSize" :options="recorderMaxSizeOptions" emit-value map-options
+                :label="$t('Recorder_max_size')" :disable="RecorderState != 'inactive'" style="width: 55%"
+                @update:model-value="saveRecorderData" />
+
             </div>
             <div class="row">
               <q-input v-model="recorderAutoStart" :label="$t('Auto_start')" :disable="RecorderState != 'inactive'"

@@ -29,6 +29,16 @@ const ConstRecorderSlicesOptions = [
   { value: 0, label: " undefine" },
 ]
 
+const ConstRecorderMaxSizeOptions = [
+  { value: 500000, label: "500 MB" },
+  { value: 1000000, label: "1 GB" },
+  { value: 2000000, label: "2 GB" },
+  { value: 4000000, label: "4 GB" },
+  { value: 6000000, label: "6 GB" },
+  { value: 8000000, label: "8 GB" },
+  { value: 0, label: " unlimited" },
+]
+
 const ConstPlaybackRateOptions = [
   { value: 0.25, label: "1/4" },
   { value: 0.5, label: "1/2" },
@@ -69,6 +79,9 @@ export default {
   ConstVideoBPSOptions,
 
   ConstRecorderSlicesOptions,
+
+
+  ConstRecorderMaxSizeOptions,
 
   ConstPlaybackRateOptions,
 

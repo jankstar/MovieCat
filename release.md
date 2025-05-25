@@ -1,3 +1,8 @@
+# MovieCat 0.3.0
+
+- new function auto save at size MB
+- file name with date/time
+
 # MovieCat 0.2.9
 
 - new field and function auto_start in min
